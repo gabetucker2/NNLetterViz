@@ -1,6 +1,7 @@
 # import scripts
 import functions.learningFuncs as learningFuncs
 import functions.activationFuncs as activationFuncs
+import functions.noiseFuncs as noiseFuncs
 
 # import libraries
 import random
@@ -13,10 +14,12 @@ n_hidden = 10
 
 # outputs
 n_outputs = 1 # do not change yet
+axonPotInterference = 0
 
 # functions
 learningAlgorithm = learningFuncs.hebbianLearning
 activationFunction = activationFuncs.activationFunction_sigmoid
+noiseFunction = noiseFuncs.norm_noise
 
 # learning parameters
 n_epochs = 5

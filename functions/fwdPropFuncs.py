@@ -1,29 +1,37 @@
 # import scripts
-import functions.axonFuncs as axonFuncs
+import debug
+import functions.mathFuncs as mathFuncs
+import paramConfigs.paramsTest as params
 
-# fwd prop
-def C_fwdProp(C_pre, npre_npost_a):
-    
-    # set up pre/postsynaptic neuron counts
-    n_pre = len(C_pre)
-    n_post = len(npre_npost_a[0])
+def fwdProp(inputs, axons_allLayers):
+    debug.Log.fwdProp(f"Beginning forward propagation...")
 
-    # calculate axon potentials
-    npre_npost_caxonPotential = [] # there are n_pre arrays of n_post axon potentials                    
-    for i_pre in range(n_pre):
-        c_pre = C_pre[i_pre]
-        npre_npost_caxonPotential.append([])
-        npost_caxonPotential = npre_npost_caxonPotential[i_pre] # there are n_post axon potentials
-        for i_post in range(n_post):
-            a_preToPost = npre_npost_a[i_pre][i_post]
-            ac_axonPotential = axonFuncs.c_axonPotential(c_pre, a_preToPost)
-            npost_caxonPotential.append(ac_axonPotential)
-    
-    # calculate postsynaptic action potential
-    C_postActivation = []
-    for i_post in range(n_post):
-        C_postAxonPotentials = [row[i_post] for row in npre_npost_caxonPotential if len(row) > i_post]
-        C_postActivation.append(axonFuncs.c_postActivation(C_postAxonPotentials))
-    
-    # return c_postActivation
-    return C_postActivation
+    numLayersToCompute = len(axons_allLayers)
+    debug.Log.fwdProp(f"FwdProp to be performed on {numLayersToCompute} layers...")
+
+    # post contains the input layer, which will immediately transfer to presynaptic layer upon booting up the loop
+    preSynMemPots = [] # presynaptic membrane potentials
+    postSynMemPots = inputs.copy() # postsynaptic membrane potentials
+    debug.Log.indent_level += 1
+    for i, axonLayer in enumerate(axons_allLayers):
+        debug.Log.axons(f"Iterating through 3D axon layer {i}")
+        debug.Log.axons(f"Transferring postSynMemPots data to preSynMemPost")
+        preSynMemPots = postSynMemPots
+        postSynMemPots = []
+
+        debug.Log.indent_level += 1
+        for j, axonConMatrix in enumerate(axonLayer): # axon conductance factor matrix for each presynaptic neuron
+            debug.Log.axons(f"Iterating through 2D presynaptic axon conductance Matrix {j}")
+
+            # aggregate axon potentials = a1w1 + a2w2 + ... + anwn + b
+            x = mathFuncs.dot_product(preSynMemPots, axonConMatrix) + params.noiseFunction(params.axonPotInterference)
+            # pass it through the activation function to get a postsynaptic membrane potential
+            postSynMemPot = params.activationFunction(x)
+
+            postSynMemPots.append(postSynMemPot)
+            
+        debug.Log.indent_level -= 1
+    debug.Log.indent_level -= 1
+
+    debug.Log.fwdProp(f"Returning final layer's membrane potentials: {postSynMemPots}")
+    return postSynMemPots

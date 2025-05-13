@@ -3,9 +3,6 @@ import traceback
 from collections import defaultdict
 from typing import List, Tuple
 
-class ConsoleManager:
-    ConsoleInitialized = True
-
 class LogFormatter:
     def __init__(self, max_repeats: int = 3):
         self.message_counts = defaultdict(int)
@@ -42,7 +39,7 @@ class Log:
         except Exception:
             return "UnknownSource"
 
-    def _print(self, msg: str, color: str, suppression_state: int):
+    def _print(self, msg: str, suppression_state: int):
         if suppression_state == 0:
             print(msg)
         elif suppression_state == 1:
@@ -52,7 +49,7 @@ class Log:
         else:
             print("[ERROR] Unknown suppression state.")
 
-    def _log(self, message: str, tag: str, color: str, show_caller: bool = False, stack_depth: int = 1):
+    def _log(self, message: str, tag: str, show_caller: bool = False, stack_depth: int = 1):
         if self.is_internal:
             return
         self.is_internal = True
@@ -63,10 +60,7 @@ class Log:
             suppression = self.formatter.track(formatted)
             full_msg = f"{formatted} | {self._get_caller_info(stack_depth)}" if show_caller else formatted
 
-            if not ConsoleManager.ConsoleInitialized:
-                self.queued_logs.append((full_msg, color, suppression))
-            else:
-                self._print(full_msg, color, suppression)
+            self._print(full_msg, suppression)
         finally:
             self.is_internal = False
 
@@ -76,8 +70,15 @@ class Log:
         return logs
 
     # Public log functions without needing a `level` argument
-    def general(self, msg: str): self._log(msg, "GENERAL", "white")
     def warning(self, msg: str): self._log(msg, "WARNING", "yellow")
     def error(self, msg: str): self._log(msg, "ERROR", "red")
+
+    def procedure(self, msg: str): self._log(msg, "PROCEDURE", "white")
     def epoch(self, msg: str): self._log(msg, "EPOCH", "cyan")
-    def trial(self, msg: str): self._log(msg, "TRIAL", "green")
+    def training(self, msg: str): self._log(msg, "TRAINING", "pink")
+    def testing(self, msg: str): self._log(msg, "TESTING", "white")
+
+    def fwdProp(self, msg: str): self._log(msg, "FWDPROP", "orange")
+    def backProp(self, msg: str): self._log(msg, "BACKPROP", "blue")
+
+    def axons(self, msg: str): self._log(msg, "AXONS", "grey")

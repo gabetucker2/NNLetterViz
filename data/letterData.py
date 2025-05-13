@@ -196,4 +196,9 @@ G_matrices = [
     ]
 ]
 
-letterVariants = [A_matrices, C_matrices, E_matrices, G_matrices]
+letterVariants = {
+    "A": A_matrices,
+    "C": C_matrices,
+    "E": E_matrices,
+    "G": G_matrices
+}
