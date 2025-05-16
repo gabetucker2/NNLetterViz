@@ -33,7 +33,7 @@ class Log:
     def _get_caller_info(self, n_back: int) -> str:
         try:
             stack = traceback.extract_stack()
-            index = max(0, len(stack) - n_back - 2)
+            index = max(0, len(stack) - n_back - 3)
             frame = stack[index]
             return f"{os.path.basename(frame.filename)}::{frame.name} @ Line {frame.lineno}"
         except Exception:
@@ -69,7 +69,6 @@ class Log:
         self.queued_logs.clear()
         return logs
 
-    # Public log functions without needing a `level` argument
     def warning(self, msg: str): self._log(msg, "WARNING", "yellow")
     def error(self, msg: str): self._log(msg, "ERROR", "red")
 
@@ -77,8 +76,11 @@ class Log:
     def epoch(self, msg: str): self._log(msg, "EPOCH", "cyan")
     def training(self, msg: str): self._log(msg, "TRAINING", "pink")
     def testing(self, msg: str): self._log(msg, "TESTING", "white")
+    def analysis(self, msg: str): self._log(msg, "ANALYSIS", "orange")
 
     def fwdProp(self, msg: str): self._log(msg, "FWDPROP", "orange")
     def backProp(self, msg: str): self._log(msg, "BACKPROP", "blue")
 
     def axons(self, msg: str): self._log(msg, "AXONS", "grey")
+
+log = Log()

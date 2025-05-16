@@ -1,5 +1,6 @@
 # Welcome!
 
-![images/NNTerms_Structure.png](images/NNTerms_Structure.png)
-![images/NNTerms_FwdProp.png](images/NNTerms_FwdProp.png)
-![images/NNTerms_Hebbian.png](images/NNTerms_Hebbian.png)
+![images/NNDiagrams_Structure.png](images/NNDiagrams_Structure.png)
+![images/NNDiagrams_FwdPropSingle.png](images/NNDiagrams_FwdPropSingle.png)
+![images/NNDiagrams_FwdPropDouble.png](images/NNDiagrams_FwdPropDouble.png)
+![images/NNDiagrams_Hebbian.png](images/NNDiagrams_Hebbian.png)

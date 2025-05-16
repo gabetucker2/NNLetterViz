@@ -42,10 +42,10 @@ def dot_product(v1, v2):
         sum += v1[i]*v2[i]
     return sum
 
-def shuffle_split(vector, splitRatio):
+def shuffle_split(variant_dict, splitRatio):
     trainingData = {}
     testingData = {}
-    for letter, matrices in vector.letterVariants.items():
+    for letter, matrices in variant_dict.items():
         n = len(matrices)
         num_train = math.ceil(splitRatio * n)
         shuffled = matrices[:]
@@ -53,3 +53,11 @@ def shuffle_split(vector, splitRatio):
         trainingData[letter] = shuffled[:num_train]
         testingData[letter] = shuffled[num_train:]
     return trainingData, testingData
+
+def compute_letter_acc(letter, letterAccuracies):
+    results = letterAccuracies.get(letter, [])
+    if not results:
+        debug.Log.warning("Unable to compute get accuracies")
+        return 0.0
+    
+    return sum(results) / len(results)
