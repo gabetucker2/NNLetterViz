@@ -1,7 +1,9 @@
+# import libraries
 from PIL import Image
 import numpy as np
 import pyperclip
 
+# functions
 def print_png_to_binary_matrix(path, threshold):
     img = Image.open(path).convert("L")
     img_array = np.array(img)
@@ -16,4 +18,5 @@ def print_png_to_binary_matrix(path, threshold):
     pyperclip.copy(result)
     print("Copied to clipboard")
 
-print_png_to_binary_matrix("A.png", threshold=100)
+# procedure
+print_png_to_binary_matrix("letterImage.png", threshold=100)

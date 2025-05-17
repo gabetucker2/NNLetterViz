@@ -4,8 +4,8 @@ import functions.activationFuncs as activationFuncs
 import functions.noiseFuncs as noiseFuncs
 
 # meta
-numEpochs = 1
-trainTestSplitRatio = 0.8
+numEpochs = 100
+trainTestSplitRatio = 0.93
 
 # NN learning params
 μ = 0.01
@@ -27,4 +27,4 @@ initAxonSD = 0.6
 
 # misc
 maxPrintRepeats = 99999
-enableVisuals = True
+enableVisuals = False
