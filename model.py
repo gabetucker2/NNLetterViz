@@ -10,7 +10,6 @@ import render
 # library imports
 from collections import defaultdict
 import numpy as np 
-from PyQt5.QtTest import QTest
 
 ##################################################################
 

@@ -18,9 +18,9 @@
 - **VSCode** – Primary development environment for all modules, debugging, and visualization
 - **Paint.NET** – Used to create 64-bit .png files of letters which were procedurally converted to our dataset's letter matrices
 
-# Notebook
+# Notebook A) Prerequisite Steps
 
-## Step 1: Draft our Model
+## Step A1: Draft our Model
 
 > We will train on three 8x8 binary encoded letters: A, C, and Z, with 28 training instances per letter type, simulating sparse-data high-dimension learning.
 
@@ -32,13 +32,13 @@
 
 ![images/NNDiagrams_Structure.png](images/NNDiagrams_Structure.png)
 
-## Step 2: Create a Dataset
+## Step A2: Create a Dataset
 
 Let's use Paint.NET to create an 8x8 letter and save it as `letter_image.png`:
 
 ![images/pdnScreenshot.png](images/pdnScreenshot.png)
 
-Next, let's write a script ([gen_data.py](data/gen_data.py)) to decode this letter, encode it as a binary Python matrix, and copy it to our clipboard:
+Next, let's write a script called [gen_data.py](data/gen_data.py) to decode this image, encode it as a binary Python matrix, and copy it to our clipboard:
 
 ```
 # import libraries
@@ -79,6 +79,48 @@ letterVariants = {
 }
 ```
 
-## Step 3: Implement our Model
+## Step A3: Set up a Debugging Framework
 
+Since this section isn't too relevant to the model, we will skip the details. Basically, we are creating a script [debug.py](debug.py), which will allow us to log events with varying levels of detail, color-coded tags, and optional caller metadata—useful for debugging, monitoring, and tracing execution flow during training and testing.  We'll set up the following debugging functions to be used later (indent_level being used for easier print tracking within loops):
 
+```
+def warning(self, msg: str): self._log(msg, "WARNING", "yellow")
+def error(self, msg: str): self._log(msg, "ERROR", "red")
+
+def procedure(self, msg: str): self._log(msg, "PROCEDURE", "white")
+def epoch(self, msg: str): self._log(msg, "EPOCH", "cyan")
+def training(self, msg: str): self._log(msg, "TRAINING", "magenta")
+def testing(self, msg: str): self._log(msg, "TESTING", "white")
+def analysis(self, msg: str): self._log(msg, "ANALYSIS", "cyan")
+
+def fwd_prop(self, msg: str): self._log(msg, "FWDPROP", "lightmagenta_ex")
+def back_prop(self, msg: str): self._log(msg, "BACKPROP", "lightblue_ex")
+
+def axons(self, msg: str): self._log(msg, "AXONS", "lightblack_ex")
+```
+
+## Step A4: Set up a PyQt5-Based Visualization Framework
+
+Again, since this section isn't too relevant to the model, we will skip the details.  In short, we will set up a framework in a new script, [render.py](render.py), that visualizes our neural network model after each trial in the testing phase.  The functions we'll use in [model.py](model.py) to control what is displayed on the screen include `update_activations()`, which updates neuron membrane potential states; `wait_for_click`, which pauses the program until a button is pressed at the bottom of the screen; and `exec_app()`, which ensures the window stays on our screen without closing once the program finishes.
+
+# Notebook B) Programming the Model 
+
+## Step B1: Set up the Model's Skeleton
+
+In [model.py](model.py), let's establish how many neurons there will per layer (in accordance with our `NN Model Structure` graph's naming practices):
+
+```
+debug.log.indent_level = 0
+debug.log.procedure("Setting up variables...")
+
+I = len(math_funcs.matrix_to_vector(list(letter_data.letter_variants.values())[0][0]))
+HN = params.num_neurons_per_hidden_layer
+HM = params.num_hidden_layers
+O = len(letter_data.letter_variants)
+
+layer_sizes = [I] + [HN] * HM + [O]
+if params.enable_visuals:
+    render.initialize_network_canvas(layer_sizes)
+
+epoch_letter_accuracies = []
+```

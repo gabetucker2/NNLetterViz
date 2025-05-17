@@ -4,16 +4,15 @@ import pyqtgraph as pg
 import numpy as np
 from PyQt5.QtCore import QEventLoop
 
-# initialize Qt application
+# initialize frame
 app = QtWidgets.QApplication([])
 
-# global widgets and state
 win = pg.GraphicsLayoutWidget(title="Neural Network Visualization")
 view = win.addViewBox()
 view.setAspectLocked(True)
 
-info_label = pg.TextItem(anchor=(0, 0), color=(255, 255, 255))  # top-left
-info_label.setZValue(10)  # render above all nodes
+info_label = pg.TextItem(anchor=(0, 0), color=(255, 255, 255))
+info_label.setZValue(10)
 
 continue_button = QtWidgets.QPushButton("Next")
 event_loop = QEventLoop()
@@ -22,12 +21,8 @@ container = None
 node_items = []
 has_initialized = False
 
-
+# functions
 def initialize_network_canvas(layer_sizes):
-    """
-    Creates and displays the static neuron layout for the network.
-    Only runs once.
-    """
     global node_items, container, has_initialized
 
     if has_initialized:
@@ -66,11 +61,7 @@ def initialize_network_canvas(layer_sizes):
     container.setLayout(layout)
     container.show()
 
-
 def update_activations(layer_outputs, actual_letter=None, predicted_letter=None, output_vector=None):
-    """
-    Updates node colors and status label based on current activations and prediction.
-    """
     for layer_idx, activations in enumerate(layer_outputs):
         if layer_idx >= len(node_items):
             continue
@@ -113,13 +104,11 @@ def update_activations(layer_outputs, actual_letter=None, predicted_letter=None,
 
     QtWidgets.QApplication.processEvents()
 
-
 def wait_for_click():
     continue_button.setEnabled(True)
     continue_button.setText("Next")
     event_loop.exec_()
     continue_button.setEnabled(False)
-
 
 def exec_app():
     app.exec_()
