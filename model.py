@@ -102,7 +102,7 @@ for epoch in range(params.numEpochs):
                     predicted_letter=predictedLetter,
                     output_vector=y
                 )
-                QTest.qWait(500)
+                render.wait_for_click()
 
         debug.log.indent_level -= 1
 
