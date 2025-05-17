@@ -1,5 +1,5 @@
 # import libraries
 import random
 
-def norm_noise(sd):
+def normalNoise(sd):
     return random.normalvariate(mu=0, sigma=sd)

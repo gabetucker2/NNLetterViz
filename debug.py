@@ -1,3 +1,7 @@
+# import functions
+import paramConfigs.paramsTest as params
+
+# import libraries
 import os
 import traceback
 from collections import defaultdict
@@ -8,27 +12,25 @@ import colorama
 colorama.init(autoreset=True)
 
 class LogFormatter:
-    def __init__(self, max_repeats: int = 3):
+    def __init__(self):
         self.message_counts = defaultdict(int)
-        self.max_repeats = max_repeats
 
     def format(self, raw_message: str, tag: str, indent_level: int = 0) -> str:
-        prefix = "  |" * indent_level
+        prefix = "    |" * indent_level
         return f"{prefix}[{tag}] {raw_message}"
 
     def track(self, base_msg: str) -> int:
         self.message_counts[base_msg] += 1
         count = self.message_counts[base_msg]
-        if count == self.max_repeats:
+        if count == params.maxPrintRepeats:
             return 1
-        elif count > self.max_repeats:
+        elif count > params.maxPrintRepeats:
             return 2
         return 0
 
 class Log:
-    indent_level = 0
-
     def __init__(self):
+        self.indent_level = 0
         self.is_internal = False
         self.formatter = LogFormatter()
         self.queued_logs: List[Tuple[str, str, int]] = []
@@ -47,7 +49,7 @@ class Log:
         if suppression_state == 0:
             print(msg)
         elif suppression_state == 1:
-            print(f"{Fore.MAGENTA}[SUPPRESSED AFTER {self.formatter.max_repeats} REPEATS]{Style.RESET_ALL} {msg}")
+            print(f"{msg} {Fore.WHITE}[SUPPRESSED AFTER {params.maxPrintRepeats} REPEATS]{Style.RESET_ALL}")
         # suppression_state == 2: do not print
 
     def _log(self, message: str, tag: str, color: str = "", show_caller: bool = False, stack_depth: int = 1):
@@ -56,17 +58,24 @@ class Log:
         self.is_internal = True
 
         try:
-            indent = Log.indent_level
+            indent = self.indent_level
             base_msg = self.formatter.format(message, tag, indent)
             suppression = self.formatter.track(base_msg)
 
             if show_caller:
                 base_msg += f" | {self._get_caller_info(stack_depth)}"
 
+            prefix = "  |" * self.indent_level
+            tag_and_msg = f"[{tag}] {message}"
             color_code = getattr(Fore, color.upper(), "")
-            formatted_msg = f"{color_code}{base_msg}{Style.RESET_ALL}"
 
-            self._print(formatted_msg, suppression)
+            base_msg = f"{Fore.WHITE}{prefix}{color_code}{tag_and_msg}{Style.RESET_ALL}"
+            if show_caller:
+                base_msg += f" | {self._get_caller_info(stack_depth)}"
+
+            suppression = self.formatter.track(f"{prefix}[{tag}] {message}")  # Track uncolored
+            self._print(base_msg, suppression)
+
         finally:
             self.is_internal = False
 
@@ -83,7 +92,7 @@ class Log:
     def epoch(self, msg: str): self._log(msg, "EPOCH", "cyan")
     def training(self, msg: str): self._log(msg, "TRAINING", "magenta")
     def testing(self, msg: str): self._log(msg, "TESTING", "white")
-    def analysis(self, msg: str): self._log(msg, "ANALYSIS", "blue")
+    def analysis(self, msg: str): self._log(msg, "ANALYSIS", "cyan")
 
     def fwdProp(self, msg: str): self._log(msg, "FWDPROP", "lightmagenta_ex")
     def backProp(self, msg: str): self._log(msg, "BACKPROP", "lightblue_ex")

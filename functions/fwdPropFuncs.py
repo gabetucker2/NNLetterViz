@@ -6,36 +6,43 @@ import debug
 import functions.mathFuncs as mathFuncs
 import paramConfigs.paramsTest as params
 
-def fwdProp(X, W):
+def fwdPropSingle(X, W):
     """
-    output: Y
+    Single output neuron: dot product + noise + activation
+    X: (n_inputs,)
+    W: (n_inputs,)
+    Returns: scalar output
     """
-    debug.Log.fwdProp(f"Beginning single-layer forward propagation...")
-
+    # debug.log.fwdProp(f"Computing single neuron potential...")
     S = np.dot(X, W) + params.noiseFunction(params.axonPotInterference)
-
     Y = params.activationFunction(S)
-
-    debug.Log.fwdProp(f"Returning membrane potentials: {Y}")
+    # debug.log.fwdProp(f"Fwd prop output: {Y}")
     return Y
 
-
-def fwdPropDeep(X, W_matrix):
+def fwdPropVector(X, W_3DMatrix):
     """
-    output: Y (layer after the final W vector)
+    Layer-wise forward propagation.
+    X: (n_inputs,)
+    W_3DMatrix: (n_outputs, n_inputs) – one weight vector per output neuron
+    Returns: (n_outputs,) – vector of activations
     """
-    debug.Log.fwdProp(f"Beginning forward propagation on {len(W_matrix)} layers...")
+    # debug.log.fwdProp(f"Computing layer with {len(W_3DMatrix)} output neurons...")
+    outputs = []
+    debug.log.indent_level += 1
+    for j, W in enumerate(W_3DMatrix):
+        # debug.log.axons(f"Output neuron {j}")
+        Yj = fwdPropSingle(X, W)
+        outputs.append(Yj)
+    debug.log.indent_level -= 1
+    return np.array(outputs)
 
-    X_working = np.array([])
-    Y_working = np.array(X.copy())
-    debug.Log.indent_level += 1
-    for i, W in enumerate(W_matrix):
-        debug.Log.axons(f"Iterating through 3D axon layer {i}")
+def fwdPropDeep(X, W_4DMatrix, return_all_layers=False):
+    X_working = X
+    outputs = [X_working]  # Include input layer
 
-        X_working = Y_working
-        Y_working = fwdProp(X_working, W)
-            
-    debug.Log.indent_level -= 1
+    for W in W_4DMatrix:
+        Y = [params.activationFuncs.activationFunction_sigmoid(np.dot(w_row, X_working)) for w_row in W]
+        X_working = Y
+        outputs.append(Y)
 
-    debug.Log.fwdProp(f"Returning final layer's membrane potentials: {Y_working}")
-    return Y_working
+    return outputs if return_all_layers else outputs[-1]
