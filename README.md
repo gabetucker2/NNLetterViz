@@ -16,6 +16,7 @@
   - **collections** – Used for accuracy tracking and performance aggregation by class
 - **Git + GitHub** – Source control and remote project visibility
 - **VSCode** – Primary development environment for all modules, debugging, and visualization
+- **Paint.NET** – Used to create 64-bit .png files of letters which were procedurally converted to our dataset's letter matrices
 
 # Notebook
 
@@ -29,11 +30,15 @@
 
 > This will be a standard neural network model (i.e., each neuron in layer A will connect to each neuron in layer B).
 
-[Image]
+![images/NNDiagrams_Structure.png](images/NNDiagrams_Structure.png)
 
 ## Step 2: Create a Dataset
 
-Drafting a brief script to automate the process of converting 
+Let's use Paint.NET to create an 8x8 letter and save it as `letter_image.png`:
+
+![images/pdnScreenshot.png](images/pdnScreenshot.png)
+
+Next, let's write a script ([gen_data.py](data/gen_data.py)) to decode this letter, encode it as a binary Python matrix, and copy it to our clipboard:
 
 ```
 # import libraries
@@ -42,7 +47,7 @@ import numpy as np
 import pyperclip
 
 # functions
-def print_png_to_binary_matrix(path, threshold):
+def png_to_mat(path, threshold):
     img = Image.open(path).convert("L")
     img_array = np.array(img)
     binary_matrix = (img_array < threshold).astype(int)
@@ -57,7 +62,23 @@ def print_png_to_binary_matrix(path, threshold):
     print("Copied to clipboard")
 
 # procedure
-print_png_to_binary_matrix("letterImage.png", threshold=100)
+png_to_mat("letterImage.png", threshold=100)
+```
+
+After running this script, we paste the resulting matrix into our [letter_data.py](data/letter_data.py) script, where we can see 1s resembling the shape of the letter A:
+
+![images/encodedLetter.png](images/encodedLetter.png)
+
+We can do this until we have 30 hand-drawn letters per category saved in [letter_data.py](data/letter_data.py), with each letter matrix stored in one centralized list—the only list to be referenced by the rest of the model:
+
+```
+letterVariants = {
+    "A": A_matrices,
+    "C": C_matrices,
+    "Z": Z_matrices,
+}
 ```
 
 ## Step 3: Implement our Model
+
+

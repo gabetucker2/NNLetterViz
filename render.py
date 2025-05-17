@@ -1,19 +1,19 @@
-# Import libraries
+# import libraries
 from PyQt5 import QtWidgets
 import pyqtgraph as pg
 import numpy as np
 from PyQt5.QtCore import QEventLoop
 
-# Initialize Qt application
+# initialize Qt application
 app = QtWidgets.QApplication([])
 
-# Global widgets and state
+# global widgets and state
 win = pg.GraphicsLayoutWidget(title="Neural Network Visualization")
 view = win.addViewBox()
 view.setAspectLocked(True)
 
-info_label = pg.TextItem(anchor=(0, 0), color=(255, 255, 255))  # Top-left
-info_label.setZValue(10)  # Render above all nodes
+info_label = pg.TextItem(anchor=(0, 0), color=(255, 255, 255))  # top-left
+info_label.setZValue(10)  # render above all nodes
 
 continue_button = QtWidgets.QPushButton("Next")
 event_loop = QEventLoop()
@@ -90,8 +90,8 @@ def update_activations(layer_outputs, actual_letter=None, predicted_letter=None,
         correct = actual_letter == predicted_letter
         result_color = "lime" if correct else "red"
 
-        from data import letterData
-        letters = list(letterData.letterVariants.keys())
+        from data import letter_data
+        letters = list(letter_data.letter_variants.keys())
 
         output_entries = [
             f"{letter}: {output_vector[i]:.2f}" for i, letter in enumerate(letters)
@@ -113,11 +113,13 @@ def update_activations(layer_outputs, actual_letter=None, predicted_letter=None,
 
     QtWidgets.QApplication.processEvents()
 
+
 def wait_for_click():
     continue_button.setEnabled(True)
     continue_button.setText("Next")
     event_loop.exec_()
     continue_button.setEnabled(False)
+
 
 def exec_app():
     app.exec_()

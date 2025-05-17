@@ -1,10 +1,10 @@
 # script imports
 import debug
-import data.letterData as letterData
-import paramConfigs.paramsTest as params
-import functions.mathFuncs as mathFuncs
-import functions.fwdPropFuncs as fwdPropFuncs
-import functions.axonFuncs as axonFuncs
+import data.letter_data as letter_data
+import param_configs.params_test as params
+import functions.math_funcs as math_funcs
+import functions.fwd_prop_funcs as fwd_prop_funcs
+import functions.axon_funcs as axon_funcs
 import render
 
 # library imports
@@ -15,91 +15,92 @@ from PyQt5.QtTest import QTest
 ##################################################################
 
 debug.log.indent_level = 0
-debug.log.procedure(f"Setting up variables...")
+debug.log.procedure("Setting up variables...")
 
-I = len(mathFuncs.matrix_to_vector(list(letterData.letterVariants.values())[0][0]))
-HN = params.numNeuronsPerHiddenLayer # neurons per hidden layer
-HM = params.numHiddenLayers          # num hidden layers
-O = len(letterData.letterVariants)   # fetch number of letters
+I = len(math_funcs.matrix_to_vector(list(letter_data.letter_variants.values())[0][0]))
+HN = params.num_neurons_per_hidden_layer
+HM = params.num_hidden_layers
+O = len(letter_data.letter_variants)
 
 layer_sizes = [I] + [HN] * HM + [O]
-if params.enableVisuals:
+if params.enable_visuals:
     render.initialize_network_canvas(layer_sizes)
 
-epochLetterAccuracies = []
+epoch_letter_accuracies = []
 
 ##################################################################
 
 debug.log.procedure("Beginning simulation...")
 debug.log.indent_level += 1
-for epoch in range(params.numEpochs):
+for epoch in range(params.num_epochs):
 
     ##################################################################
 
-    debug.log.epoch(f"Epoch {epoch+1} / {params.numEpochs}")
+    debug.log.epoch(f"Epoch {epoch + 1} / {params.num_epochs}")
 
     debug.log.epoch("Splitting and randomizing order of data for training and testing...")
-    trainingData, testingData = mathFuncs.per_class_shuffle_split(letterData.letterVariants, params.trainTestSplitRatio)
+    training_data, testing_data = math_funcs.per_class_shuffle_split(
+        letter_data.letter_variants, params.train_test_split_ratio)
 
     flattened_training = [
         (label, matrix)
-        for label, matrices in trainingData.items()
+        for label, matrices in training_data.items()
         for matrix in matrices
     ]
     np.random.shuffle(flattened_training)
 
     debug.log.axons("Initializing axon conductances...")
-    W_matrix = axonFuncs.getAxons(I, HN, HM, O)
+    W_matrix = axon_funcs.get_axons(I, HN, HM, O)
     # debug.log.axons(f"Axon matrix before training:\n{W_matrix}")
 
     ##################################################################
 
-    debug.log.training(f"Beginning training...")
+    debug.log.training("Beginning training...")
     debug.log.indent_level += 1
-    for i, (actualLetter, trainingMatrix) in enumerate(flattened_training):
-        debug.log.training(f"Training on matrix of letter type '{actualLetter}'")
+    for i, (actual_letter, training_matrix) in enumerate(flattened_training):
+        debug.log.training(f"Training on matrix of letter type '{actual_letter}'")
 
-        X = mathFuncs.matrix_to_vector(trainingMatrix)
-        T = mathFuncs.one_hot(actualLetter, O)
-        W_matrix = params.learningAlgorithmDeep(X, W_matrix, T=T)
+        X = math_funcs.matrix_to_vector(training_matrix)
+        T = math_funcs.one_hot(actual_letter, O)
+        W_matrix = params.learning_algorithm_deep(X, W_matrix, t=T)
 
     debug.log.indent_level -= 1
 
     # debug.log.training(f"Matrix after training:\n{W_matrix}")
 
     ##################################################################
-    
-    debug.log.testing(f"Beginning testing...")
 
-    letterAccuracies = {}
+    debug.log.testing("Beginning testing...")
+
+    letter_accuracies = {}
 
     debug.log.indent_level += 1
-    for actualLetter, testingMatrices in testingData.items():
-        debug.log.testing(f"Testing matrix of letter type '{actualLetter}'")
-        
-        debug.log.indent_level += 1
-        for i, matrix in enumerate(testingMatrices):
-            # debug.log.testing(f"Iterating over letter '{actualLetter}' instance {i}")
-            X = mathFuncs.matrix_to_vector(matrix)
-            layer_outputs = fwdPropFuncs.fwdPropDeep(X, W_matrix, return_all_layers=True)
-            y = layer_outputs[-1]
-            predictedLetterIndex = np.argmax(y)
-            predictedLetter = list(letterData.letterVariants.keys())[predictedLetterIndex]
+    for actual_letter, testing_matrices in testing_data.items():
+        debug.log.testing(f"Testing matrix of letter type '{actual_letter}'")
 
-            isCorrect = (predictedLetter == actualLetter)
+        debug.log.indent_level += 1
+        for i, matrix in enumerate(testing_matrices):
+            # debug.log.testing(f"Iterating over letter '{actual_letter}' instance {i}")
+            X = math_funcs.matrix_to_vector(matrix)
+            layer_outputs = fwd_prop_funcs.fwd_prop_deep(X, W_matrix, return_all_layers=True)
+            y = layer_outputs[-1]
+            predicted_index = np.argmax(y)
+            predicted_letter = list(letter_data.letter_variants.keys())[predicted_index]
+
+            is_correct = (predicted_letter == actual_letter)
 
             # debug.log.testing(f"Output membrane potentials: {y}")
-            debug.log.testing(f"Predicted: '{predictedLetter}'; Actual: '{actualLetter}'")
+            debug.log.testing(f"Predicted: '{predicted_letter}'; Actual: '{actual_letter}'")
 
-            if actualLetter not in letterAccuracies:
-                letterAccuracies[actualLetter] = []
-            letterAccuracies[actualLetter].append(isCorrect)
+            if actual_letter not in letter_accuracies:
+                letter_accuracies[actual_letter] = []
+            letter_accuracies[actual_letter].append(is_correct)
 
-            if params.enableVisuals:
+            if params.enable_visuals:
                 render.update_activations(
                     layer_outputs,
-                    actual_letter=actualLetter,
-                    predicted_letter=predictedLetter,
+                    actual_letter=actual_letter,
+                    predicted_letter=predicted_letter,
                     output_vector=y
                 )
                 render.wait_for_click()
@@ -110,16 +111,12 @@ for epoch in range(params.numEpochs):
 
     ##################################################################
 
-    epochLetterAccuracies.append(letterAccuracies)
+    epoch_letter_accuracies.append(letter_accuracies)
 
-    correct = 0
-    total = 0
-    for results in letterAccuracies.values():
-        correct += sum(results)
-        total += len(results)
-
-    epochAccuracy = correct / total if total else 0.0
-    debug.log.analysis(f"Model accuracy in this epoch: {epochAccuracy:.2%}")
+    correct = sum(sum(results) for results in letter_accuracies.values())
+    total = sum(len(results) for results in letter_accuracies.values())
+    epoch_accuracy = correct / total if total else 0.0
+    debug.log.analysis(f"Model accuracy in this epoch: {epoch_accuracy:.2%}")
 
     ##################################################################
 
@@ -128,14 +125,12 @@ debug.log.indent_level -= 1
 ##################################################################
 
 debug.log.analysis("Beginning analytics...")
-
 debug.log.analysis("Computing average accuracies across all epochs and letters...")
 total_correct = 0
 total_instances = 0
 per_letter_results = defaultdict(list)
 
-# Flatten epoch results to get per-letter performance across all epochs
-for epoch_data in epochLetterAccuracies:
+for epoch_data in epoch_letter_accuracies:
     if not isinstance(epoch_data, dict):
         debug.log.warning("Skipping invalid epoch data format (expected dict).")
         continue
@@ -160,9 +155,11 @@ accuracy_delta = average_accuracy - baseline_accuracy
 
 debug.log.analysis("Final simulation analytics...")
 
-debug.log.analysis(f"Number of epochs: {params.numEpochs}")
-debug.log.analysis(f"Average model accuracy across {params.numEpochs} epochs: {average_accuracy:.2%}")
-debug.log.analysis(f"Model accuracy delta: {accuracy_delta:.2%} ({average_accuracy:.2%} model accuracy vs {baseline_accuracy:.2%} random guess accuracy)")
+debug.log.analysis(f"Number of epochs: {params.num_epochs}")
+debug.log.analysis(f"Average model accuracy across {params.num_epochs} epochs: {average_accuracy:.2%}")
+debug.log.analysis(
+    f"Model accuracy delta: {accuracy_delta:.2%} "
+    f"({average_accuracy:.2%} model accuracy vs {baseline_accuracy:.2%} random guess accuracy)")
 
 debug.log.analysis("Average accuracy per letter:")
 debug.log.indent_level += 1
@@ -179,5 +176,5 @@ debug.log.indent_level -= 1
 
 ##################################################################
 
-if params.enableVisuals:
+if params.enable_visuals:
     render.exec_app()
