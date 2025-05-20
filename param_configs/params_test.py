@@ -7,7 +7,7 @@ import functions.noise_funcs as noise_funcs
 num_epochs = 100
 
 # training/testing data
-train_test_split_ratio = 0.93
+train_test_split_ratio = 0.94
 
 # NN learning params
 μ = 0.01
@@ -15,8 +15,8 @@ num_hidden_layers = 2
 num_neurons_per_hidden_layer = 64
 
 # NN algorithms
-learning_algorithm = learning_funcs.widrow_hoff_learning
-learning_algorithm_deep = learning_funcs.widrow_hoff_learning_deep
+learning_algorithm = learning_funcs.semisup_norm_hebbian_learning
+learning_algorithm_deep = learning_funcs.semisup_norm_hebbian_learning_deep
 activation_function = activation_funcs.activation_function_linear
 
 # NN noise

@@ -23,6 +23,7 @@ HM = params.num_hidden_layers
 O = len(letter_data.letter_variants)
 
 layer_sizes = [I] + [HN] * HM + [O]
+debug.log.procedure(f"Layer sizes: {layer_sizes}")
 if params.enable_visuals:
     render.initialize_network_canvas(layer_sizes)
 
@@ -50,8 +51,12 @@ for epoch in range(params.num_epochs):
     np.random.shuffle(flattened_training)
 
     debug.log.axons("Initializing axon conductances...")
-    W_matrix = axon_funcs.get_axons(I, HN, HM, O)
-    # debug.log.axons(f"Axon matrix before training:\n{W_matrix}")
+    W_layers = axon_funcs.get_axons(I, HN, HM, O)
+    expected_shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
+    for i, (W, (n_in, n_out)) in enumerate(zip(W_layers, expected_shapes)):
+        assert W.shape == (n_in, n_out), f"[INIT ERROR] W_layers[{i}] expected shape {(n_in, n_out)}, got {W.shape}"
+
+    # debug.log.axons(f"Axon matrix before training:\n{W_layers}")
 
     ##################################################################
 
@@ -62,11 +67,13 @@ for epoch in range(params.num_epochs):
 
         X = math_funcs.matrix_to_vector(training_matrix)
         T = math_funcs.one_hot(actual_letter, O)
-        W_matrix = params.learning_algorithm_deep(X, W_matrix, t=T)
+        assert X.shape == (I,), f"[TRAIN ERROR] Input X shape mismatch. Expected {(I,)}, got {X.shape}"
+        assert T.shape == (O,), f"[TRAIN ERROR] Target T shape mismatch. Expected {(O,)}, got {T.shape}"
+        W_layers = params.learning_algorithm_deep(X, W_layers, T=T)
 
     debug.log.indent_level -= 1
 
-    # debug.log.training(f"Matrix after training:\n{W_matrix}")
+    # debug.log.training(f"Matrix after training:\n{W_layers}")
 
     ##################################################################
 
@@ -82,7 +89,7 @@ for epoch in range(params.num_epochs):
         for i, matrix in enumerate(testing_matrices):
             # debug.log.testing(f"Iterating over letter '{actual_letter}' instance {i}")
             X = math_funcs.matrix_to_vector(matrix)
-            layer_outputs = fwd_prop_funcs.fwd_prop_deep(X, W_matrix, return_all_layers=True)
+            layer_outputs = fwd_prop_funcs.fwd_prop_deep(X, W_layers, return_all_layers=True)
             y = layer_outputs[-1]
             predicted_index = np.argmax(y)
             predicted_letter = list(letter_data.letter_variants.keys())[predicted_index]

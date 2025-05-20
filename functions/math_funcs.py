@@ -8,12 +8,8 @@ from collections import defaultdict
 import numpy as np
 
 # math functions
-def matrix_to_vector(matrix):   
-    flattened_vector = []
-    for element in matrix:
-        flattened_vector.extend(element)
-
-    return flattened_vector
+def matrix_to_vector(matrix):
+    return np.array(matrix).flatten()
 
 def vector_to_matrix(vector):
     length = len(vector)

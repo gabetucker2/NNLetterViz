@@ -414,6 +414,8 @@ def unsup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
     return W_matrix_new
 ```
 
+
+
 ## Step D2: Unsupervised Normalized Hebbian Learning
 
 Next, let's implement a version with the algorithm's membrane potentials normalized using Euclidean normalization in order to more smoothly prevent weight explosion than purely by using our `clip_weights` function.
@@ -494,7 +496,7 @@ def semisup_norm_hebbian_learning(X, W, Y=None, T=None):
     return axon_funcs.clip_weights(W_new)
 
 def semisup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
-    
+
     ...
 ```
 

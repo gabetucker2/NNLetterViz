@@ -11,21 +11,21 @@ def init_axon_val():
     return random.normalvariate(mu=params.init_axon_mean, sigma=params.init_axon_sd)
 
 def get_axons(I, HN, HM, O):
-    def new_layer(n_out, n_in):
-        return [[init_axon_val() for _ in range(n_in)] for _ in range(n_out)]
+    def new_layer(n_in, n_out):
+        return np.array([[init_axon_val() for _ in range(n_out)] for _ in range(n_in)])
     
-    # Exception for perceptrons
+    # perceptron case
     if HM == 0:
-        return new_layer(I, O)
+        return [new_layer(I, O)]  # input × output
 
-    # Input -> First hidden layer
-    axons_input_hidden = new_layer(HN, I)  # HN x I
+    # input → first hidden
+    axons_input_hidden = new_layer(I, HN)  # I × HN
 
-    # Hidden -> Hidden (HM - 1 layers of axons)
-    axons_hidden_hidden = [new_layer(HN, HN) for _ in range(HM - 1)]  # HM-1 layers of HN x HN
+    # hidden → hidden
+    axons_hidden_hidden = [new_layer(HN, HN) for _ in range(HM - 1)]
 
-    # Last hidden -> Output
-    axons_hidden_output = new_layer(O, HN)  # O x HN
+    # last hidden → output
+    axons_hidden_output = new_layer(HN, O)  # HN × O
 
     return [axons_input_hidden] + axons_hidden_hidden + [axons_hidden_output]
 
