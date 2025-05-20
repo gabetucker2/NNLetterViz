@@ -1,5 +1,4 @@
 # import scripts
-import debug
 import data.letter_data as letter_data
 
 # import libraries
@@ -41,20 +40,20 @@ def dot_product(v1, v2):
 def shuffle_split(letter_variants, ratio):
     all_data = []
 
-    # Flatten all letter samples into (label, matrix) pairs
+    # flatten letter samples into [label, matrix] pairs
     for letter, matrices in letter_variants.items():
         for matrix in matrices:
             all_data.append((letter, matrix))
 
-    # Shuffle the full list
+    # shuffle the list
     random.shuffle(all_data)
 
-    # Split
+    # pplit
     split_idx = int(len(all_data) * ratio)
     train_raw = all_data[:split_idx]
     test_raw = all_data[split_idx:]
 
-    # Group back by letter
+    # group back by letter
     train = defaultdict(list)
     test = defaultdict(list)
 

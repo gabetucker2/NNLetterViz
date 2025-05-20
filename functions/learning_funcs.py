@@ -4,133 +4,198 @@ import numpy as np
 # import scripts
 import debug
 import param_configs.params_test as params
-import functions.math_funcs as math_funcs
 import functions.fwd_prop_funcs as fwd_prop_funcs
+import functions.axon_funcs as axon_funcs
 
-def learn(x, w, y=None, t=None):
+# general functions
+def learn(X, W, Y=None, T=None):
     """
-    output: w_new
+    output: W_new
     """
-    params.learning_algorithm(x, w, y=y, t=t)
+    return params.learning_algorithm(X, W, Y=Y, T=T)
 
-def learn_deep(x, w_matrix, y=None, t=None):
+def learn_deep(X, W_matrix, Y=None, T=None):
     """
-    output: w_new
+    output: W_matrix_new
     """
-    params.learning_algorithm_deep(x, w_matrix, y=y, t=t)
+    return params.learning_algorithm_deep(X, W_matrix, Y=Y, T=T)
 
-def unsup_hebbian_learning(x, w, y=None, t=None):
+# specific learning functions
+def unsup_hebbian_learning(X, W, Y=None, T=None):
     """
-    output: w_new
+    output: W_new
     """
-    x = np.array(x)
-    y = np.array(y)
+    X = np.array(X)
+    Y = np.array(Y)
 
-    x_norm = x / (np.linalg.norm(x) + 1e-8)
-    y_norm = y / (np.linalg.norm(y) + 1e-8)
+    ΔW = params.μ * np.outer(Y, X)
 
-    delta_w = params.μ * np.outer(y_norm, x_norm)
-    w_new = w + delta_w
+    W_new = W + ΔW
 
-    return np.clip(w_new, -10, 10)
+    return axon_funcs.clip_weights(W_new)
 
-def unsup_hebbian_learning_deep(x, w_matrix, y=None, t=None):
+def unsup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
     """
-    output: w_matrix_new
+    output: W_matrix_new
     """
-    x_working = np.array(x.copy())
-    w_matrix_new = []
+    X_working = np.array(X.copy())
+    W_matrix_new = []
 
     debug.log.indent_level += 1
-    for i, w in enumerate(w_matrix):
-        y_layer = np.array([fwd_prop_funcs.fwd_prop_single(x_working, w_row) for w_row in w])
-        w_new = unsup_hebbian_learning(x_working, w, y=y_layer)
-        w_matrix_new.append(w_new)
-        x_working = y_layer
+    for i, W in enumerate(W_matrix):
+        Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
+        W_new = unsup_hebbian_learning(X_working, W, Y=Y_layer)
+        W_matrix_new.append(W_new)
+        X_working = Y_layer
     debug.log.indent_level -= 1
 
-    return w_matrix_new
+    return W_matrix_new
 
-def sup_hebbian_learning(x, w, y=None, t=None):
+def unsup_norm_hebbian_learning(X, W, Y=None, T=None):
     """
-    output: w_new
+    output: W_new
     """
-    x = np.array(x)
-    t = np.array(t)
+    X = np.array(X)
+    Y = np.array(Y)
 
-    x_norm = x / (np.linalg.norm(x) + 1e-8)
+    X_norm = axon_funcs.euc_normalize_membrane_pots(X)
+    Y_norm = axon_funcs.euc_normalize_membrane_pots(Y)
 
-    w_new = w.copy()
-    delta_w = params.μ * np.outer(t, x_norm)
-    w_new += delta_w
+    ΔW = params.μ * np.outer(Y_norm, X_norm)
 
-    return np.clip(w_new, -5, 5)
+    W_new = W + ΔW
 
-def sup_hebbian_learning_deep(x, w_matrix, y=None, t=None):
+    return axon_funcs.clip_weights(W_new)
+
+def unsup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
     """
-    output: w_matrix_new
+    output: W_matrix_new
     """
-    x_working = np.array(x.copy())
-    w_matrix_new = []
+    X_working = np.array(X.copy())
+    W_matrix_new = []
 
     debug.log.indent_level += 1
-    for i, w in enumerate(w_matrix):
-        if i < len(w_matrix) - 1:
-            y_layer = np.array([fwd_prop_funcs.fwd_prop_single(x_working, w_row) for w_row in w])
-            w_new = unsup_hebbian_learning(x_working, w, y=y_layer)
-            x_working = y_layer
+    for i, W in enumerate(W_matrix):
+        Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
+        W_new = unsup_norm_hebbian_learning(X_working, W, Y=Y_layer)
+        W_matrix_new.append(W_new)
+        X_working = Y_layer
+    debug.log.indent_level -= 1
+
+    return W_matrix_new
+
+def semisup_hebbian_learning(X, W, Y=None, T=None):
+    """
+    output: W_new
+    """
+    X = np.array(X)
+    T = np.array(T)
+
+    ΔW = params.μ * np.outer(T, X)
+    
+    W_new = W + ΔW
+
+    return axon_funcs.clip_weights(W_new)
+
+def semisup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
+    """
+    output: W_matrix_new
+    """
+    X_working = np.array(X.copy())
+    W_matrix_new = []
+
+    debug.log.indent_level += 1
+    for i, W in enumerate(W_matrix):
+        if i < len(W_matrix) - 1:
+            Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
+            W_new = unsup_hebbian_learning(X_working, W, Y=Y_layer)
+            X_working = Y_layer
         else:
-            w_new = sup_hebbian_learning(x_working, w, t=t)
-        w_matrix_new.append(w_new)
+            W_new = semisup_hebbian_learning(X_working, W, T=T)
+        W_matrix_new.append(W_new)
     debug.log.indent_level -= 1
 
-    return w_matrix_new
+    return W_matrix_new
 
-def widrow_hoff_learning(x, w, y=None, t=None):
+def semisup_norm_hebbian_learning(X, W, Y=None, T=None):
     """
-    output: w_new
+    output: W_new
     """
-    x = np.array(x)
-    y = np.array(y)
-    t = np.array(t)
+    X = np.array(X)
+    T = np.array(T)
 
-    dy = params.activation_function(y, derivative=True, from_output=True)
-    delta = (t - y) * dy
-    delta_w = params.μ * np.outer(delta, x)
+    X_norm = X / (np.linalg.norm(X) + 1e-8)
+    ΔW = params.μ * np.outer(T, X_norm)
+    W_new = W + ΔW
 
-    w_new = np.array(w) + delta_w
-    return w_new
+    return axon_funcs.clip_weights(W_new)
 
-def widrow_hoff_learning_deep(x, w_matrix, y=None, t=None):
+def semisup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
     """
-    output: w_matrix_new
+    output: W_matrix_new
     """
-    if y is None:
-        y = fwd_prop_funcs.fwd_prop_deep(x, w_matrix, return_all_layers=True)
+    X_working = np.array(X.copy())
+    W_matrix_new = []
 
-    activations = [np.array(x)] + [np.array(y_i) for y_i in y]
-    num_layers = len(w_matrix)
-    deltas = [None] * num_layers
+    debug.log.indent_level += 1
+    for i, W in enumerate(W_matrix):
+        if i < len(W_matrix) - 1:
+            Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
+            W_new = unsup_norm_hebbian_learning(X_working, W, Y=Y_layer)
+            X_working = Y_layer
+        else:
+            W_new = semisup_norm_hebbian_learning(X_working, W, T=T)
+        W_matrix_new.append(W_new)
+    debug.log.indent_level -= 1
 
-    y_output = np.array(y[-1])
-    t = np.array(t)
-    act_deriv_output = np.array([params.activation_function(y_i, derivative=True, from_output=True) for y_i in y_output])
-    deltas[-1] = (t - y_output) * act_deriv_output
+    return W_matrix_new
+
+def widrow_hoff_learning(X, W, Y=None, T=None):
+    """
+    output: W_new
+    """
+    X = np.array(X)
+    Y = np.array(Y)
+    T = np.array(T)
+
+    dY = params.activation_function(Y, derivative=True, from_output=True)
+    Delta = (T - Y) * dY
+    ΔW = params.μ * np.outer(Delta, X)
+
+    W_new = np.array(W) + ΔW
+
+    return axon_funcs.clip_weights(W_new)
+
+def widrow_hoff_learning_deep(X, W_matrix, Y=None, T=None):
+    """
+    output: W_matrix_new
+    """
+    if Y is None:
+        Y = fwd_prop_funcs.fwd_prop_deep(X, W_matrix, return_all_layers=True)
+
+    Activations = [np.array(X)] + [np.array(Y_i) for Y_i in Y]
+    num_layers = len(W_matrix)
+    Deltas = [None] * num_layers
+
+    Y_output = np.array(Y[-1])
+    T = np.array(T)
+    Act_deriv_output = np.array([params.activation_function(Y_i, derivative=True, from_output=True) for Y_i in Y_output])
+    Deltas[-1] = (T - Y_output) * Act_deriv_output
 
     for l in reversed(range(num_layers - 1)):
-        w_next = np.array(w_matrix[l + 1])
-        delta_next = deltas[l + 1]
-        y_l = np.array(y[l])
-        act_deriv = np.array([params.activation_function(y_i, derivative=True, from_output=True) for y_i in y_l])
-        deltas[l] = (w_next.T @ delta_next) * act_deriv
+        W_next = np.array(W_matrix[l + 1])
+        Δnext = Deltas[l + 1]
+        Y_l = np.array(Y[l])
+        Act_deriv = np.array([params.activation_function(Y_i, derivative=True, from_output=True) for Y_i in Y_l])
+        Deltas[l] = (W_next.T @ Δnext) * Act_deriv
 
-    w_matrix_new = []
+    W_matrix_new = []
     for i in range(num_layers):
-        input_to_layer = activations[i]
-        w = np.array(w_matrix[i])
-        error_signal = deltas[i]
-        delta_w = params.μ * np.outer(error_signal, input_to_layer)
-        w_new = w + delta_w
-        w_matrix_new.append(w_new)
+        Input_to_layer = Activations[i]
+        W = np.array(W_matrix[i])
+        Error_signal = Deltas[i]
+        ΔW = params.μ * np.outer(Error_signal, Input_to_layer)
+        W_new = W + ΔW
+        W_matrix_new.append(W_new)
 
-    return w_matrix_new
+    return W_matrix_new

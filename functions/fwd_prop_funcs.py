@@ -2,45 +2,34 @@
 import numpy as np
 
 # import scripts
-import debug
-import functions.math_funcs as math_funcs
 import param_configs.params_test as params
 
-def fwd_prop_single(x, w):
+# functions
+def fwd_prop(X, W_matrix):
     """
-    Single output neuron: dot product + noise + activation
-    x: (n_inputs,)
-    w: (n_inputs,)
-    Returns: scalar output
+    X: vector of presynaptic membrane potentials
+    W_matrix: matrix of axon conductances between the two layers (output_neurons x input_neurons)
+    output: vector of postsynaptic membrane potentials
     """
-    s = np.dot(x, w) + params.noise_function(params.axon_pot_interference)
-    y = params.activation_function(s)
+    b = params.noise_function(params.axon_pot_interference)
+    S = np.dot(X, W_matrix) + b
+    Y = params.activation_function(S)
     
-    return y
+    return Y
 
-def fwd_prop_vector(x, w_3d_matrix):
+def fwd_prop_deep(X, W_layers, return_all_layers=False):
     """
-    Layer-wise forward propagation.
-    x: (n_inputs,)
-    w_3d_matrix: (n_outputs, n_inputs) – one weight vector per output neuron
-    Returns: (n_outputs,) – vector of activations
+    X: vector of input membrane potentials
+    W_layers: list of matrices of axon conductances between layers (layers × output_neurons × input_neurons)
+    return_all_layers: whether to return the full propagation trace or just the final output
+    output: matrix of postsynaptic membrane potentials for all layers if return_all_layers=True
+    output: vector of the final postsynaptic membrane potentials in the matrix if return_all_layers=False
     """
-    outputs = []
-    debug.log.indent_level += 1
-    for j, w_row in enumerate(w_3d_matrix):
-        # debug.log.axons(f"Output neuron {j}")
-        y_j = fwd_prop_single(x, w_row)
-        outputs.append(y_j)
-    debug.log.indent_level -= 1
-    return np.array(outputs)
-
-def fwd_prop_deep(x, w_4d_matrix, return_all_layers=False):
-    x_working = x
-    outputs = [x_working]  # Include input layer
-
-    for w in w_4d_matrix:
-        y = [params.activation_funcs.activation_function_sigmoid(np.dot(w_row, x_working)) for w_row in w]
-        x_working = y
-        outputs.append(y)
+    X_working = X
+    outputs = [X_working]
+    for W_matrix in W_layers:
+        Y = fwd_prop(X, W_matrix)
+        X_working = Y
+        outputs.append(Y)
 
     return outputs if return_all_layers else outputs[-1]

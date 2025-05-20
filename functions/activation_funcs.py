@@ -11,13 +11,12 @@ def activation_function_linear(x, derivative=False, from_output=False):
 def activation_function_threshold(x, derivative=False, from_output=False):
     x = np.array(x)
     if derivative:
-        return np.zeros_like(x)  # undefined almost everywhere
+        return np.zeros_like(x)
     return (x >= 0.5).astype(float)
 
 def activation_function_sigmoid(x, derivative=False, from_output=False):
     x = np.array(x)
-    x_clipped = np.clip(x, -500, 500)
-    s = 1 / (1 + np.exp(-x_clipped))
+    s = 1 / (1 + np.exp(-x))
     if derivative:
         return s * (1 - s) if not from_output else x * (1 - x)
     return s

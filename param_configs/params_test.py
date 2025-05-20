@@ -3,8 +3,10 @@ import functions.learning_funcs as learning_funcs
 import functions.activation_funcs as activation_funcs
 import functions.noise_funcs as noise_funcs
 
-# meta
+# epochs
 num_epochs = 100
+
+# training/testing data
 train_test_split_ratio = 0.93
 
 # NN learning params
@@ -21,9 +23,11 @@ activation_function = activation_funcs.activation_function_linear
 axon_pot_interference = 0
 noise_function = noise_funcs.normal_noise
 
-# NN axon generation
+# NN axon conductances
 init_axon_mean = 0
 init_axon_sd = 0.6
+
+axon_weight_max_dev = 10
 
 # misc
 max_print_repeats = 99999

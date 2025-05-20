@@ -1,0 +1,225 @@
+\documentclass[12 pt]{article}
+\usepackage{amsfonts, amssymb, amsmath, amsthm}
+
+\oddsidemargin=-0.5cm
+\setlength{\textwidth}{6.5in}
+
+\topmargin = -0.8in
+\headsep = 10pt
+\voffset = 0pt
+\textheight = 9.5in
+
+\begin{document}\thispagestyle{empty}
+\section*{Terms}
+
+	Given lowercase letters are scalar values and uppercase letters are vectors/matrices...
+	\begin{itemize}
+		\item $X$ = vector of presynaptic membrane potentials
+		\item $Y$ = vector of postsynaptic membrane potentials
+		\item $T$ = vector of target postsynaptic membrane potentials
+		\item $E$ = vector of error between target and actual postsynaptic membrane potentials
+		\item $W_{XY}$ = vector of axon conductance factors between $X$ and $Y$
+		\item $b$ = forward propagation interference factor
+		\item $S$ = vector of axon potentials
+		\item $\eta$ = learning factor
+		\item $t_{hresh}$ = axon potential action threshold
+	\end{itemize}
+
+\newpage\thispagestyle{empty}
+\section*{Forward Propagation / $(X, W_{XY}, b) \Rightarrow Y$}
+
+	Assuming:
+		$
+			X = [2, 3],
+			\quad W_{XY} = \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix},
+			\quad b = 0
+		$\\\\
+
+	\textbf{Compute Axon Potential $(X, W_{XY}, b) \Rightarrow S$}
+	\begin{align*}
+		S &= X \cdot W_{XY} + b\\
+		&= [2, 3] \cdot \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix} + 0\\
+		&= [(2)(4) + (3)(0), (2)(5) + (3)(-2)]\\
+		&= [11, 4]
+	\end{align*}
+
+	\textbf{Compute Activation Functions / $S \Rightarrow Y$}\\\\
+	Assuming $\forall_i s_i \in S$...
+	\begin{itemize}
+		\item \textbf{Linear:} $f_{act}(S) = S$
+		\item \textbf{Threshold:}
+		$
+		f_{\text{act}}(S) = \left[ \begin{cases}
+			0 & \text{if } s_i \le t_{\text{hreshold}}\\
+			1 & \text{if } s_i > t_{\text{hreshold}}
+		\end{cases}\right]_{i=0}^{n-1}
+		= \begin{bmatrix}s_0\\s_{1}\\...\\s_{n-1}\end{bmatrix}
+		$
+		\item \textbf{Sigmoid:}
+		$
+			f_{act}(S) = \left[ \frac{1}{1 + \exp(-s_i)}\right]_{i=0}^{n-1}
+			= \begin{bmatrix}s_0\\s_1\\...\\s_{n-1}\end{bmatrix}
+		$
+	\end{itemize}
+
+\newpage\thispagestyle{empty}
+\section*{Unsupervised Hebbian Learning / $(\eta, X, Y, W_{XY}) \Rightarrow W_{XY}'$}
+
+	\begin{itemize}
+		\item Replicates classical conditioning
+		\item Biologically inspired
+		\item Learns associations, but does not recognize right from wrong
+	\end{itemize}
+
+	Assuming:
+		$
+			\eta = 0.1
+			\quad X = [2, 3],
+			\quad Y = [11, 16],
+			\quad W_{XY} = \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix},
+		$\\\\
+
+	\textbf{Calculate weight delta matrix / $(\eta, X, Y) \Rightarrow \Delta W_{XY}$}
+	\begin{align*}
+		\Delta W_{XY} &= \eta \times X^T \times Y\\
+		&= 0.1 \times \begin{bmatrix}2\\3\end{bmatrix} \begin{bmatrix}11,16\end{bmatrix}\\
+		&= 0.1 \times \begin{bmatrix}(2)(11) & (2)(16)\\(3)(11) & (3)(16)\end{bmatrix}\\
+		&= \begin{bmatrix}2.2 & 3.2\\16.5 & 24\end{bmatrix}
+	\end{align*}
+	
+	\textbf{Apply weight delta matrix / $(W_{XY}, \Delta W_{XY}) \Rightarrow W_{XY}'$}
+	\begin{align*}
+		W_{XY}' &= W_{XY} + \Delta W_{XY}\\
+		&= \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix} + \begin{bmatrix}2.2 & 3.2\\16.5 & 24\end{bmatrix}\\
+		&= \begin{bmatrix}6.2 & 8.2\\16.5 & 22\end{bmatrix}
+	\end{align*}
+
+\newpage\thispagestyle{empty}
+\section*{Semi-Supervised Hebbian Learning / $(\eta, X, T, W_{XY}) \Rightarrow W_{XY}'$}
+
+	\begin{itemize}
+		\item Combines classical (unsupervised) and operant (supervised) conditioning principles
+		\item Does unsupervised learning on the whole network, then does supervised learning on the final axon conductance vector
+		\item Biologically inspired
+		\item Error-driven reinforcement guided by target output and ignoring current output on final axon conductance vector
+	\end{itemize}
+
+	Assuming:
+		$
+			\eta = 0.1,
+			\quad X = [2, 3],
+			\quad T = [13, 17],
+			\quad W_{XY} = \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix}
+		$\\\\
+
+	\begin{itemize}
+		\item First, perform Unsupervised Hebbian Learning on all axon conductances up to the network's output membrane potential vector.
+		\item Next, perform the Supervised Hebbian Learning on the axon conductance vector connecting the final hidden layer's membrane potential vector and the output membrane potential vector like so:
+	\end{itemize}
+
+	\textbf{Calculate weight delta vector / $(\eta, X, T) \Rightarrow \Delta W_{XY}$}
+	\begin{align*}
+		\Delta W_{XY} &= \eta \times X^T \times T\\
+		&= 0.1 \times \begin{bmatrix}2\\3\end{bmatrix} \begin{bmatrix}13,17\end{bmatrix}\\
+		&= 0.1 \times \begin{bmatrix}(2)(13) & (2)(17)\\(3)(13) & (3)(17)\end{bmatrix}\\
+		&= \begin{bmatrix}2.6 & 3.4\\3.9 & 5.1\end{bmatrix}
+	\end{align*}
+	
+	\textbf{Calculate final weight vector / $(W_{XY}, \Delta W_{XY}) \Rightarrow W_{XY}'$}
+	\begin{align*}
+		W_{XY}' &= W_{XY} + \Delta W_{XY}\\
+		&= \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix} + \begin{bmatrix}2.2 & 3.2\\16.5 & 24\end{bmatrix}\\
+		&= \begin{bmatrix}6.2 & 8.2\\16.5 & 22\end{bmatrix}
+	\end{align*}
+
+\newpage\thispagestyle{empty}
+\section*{Gradient Descent / $Theorem$}
+
+	\begin{itemize}
+		\item Used to calculate $\Delta W_{XY}$ given an error expression
+	\end{itemize}
+
+	Assuming:
+		$
+			E_{wh}' = \frac{1}{2}(T - Y)^2 \quad\text{Widrow-Hoff error with } \frac{1}{2}(...)^2 \text{ for derivative convenience}
+		$\\\\
+
+	\textbf{Perform Gradient Descent on Widrow-Hoff error / $E_{wh} \Rightarrow \Delta W_{XY}$}
+	\begin{align*}
+		\frac{\partial E_{wh}'}{\partial Y} &= \frac{\partial }{\partial Y} E_{wh}'\\
+		&= \frac{\partial }{\partial Y} \frac{1}{2}(T - Y)^2\\
+		&= \frac{1}{2} \cdot \frac{\partial }{\partial Y} (T - Y)^2\\
+		&= \frac{1}{2} \cdot \frac{\partial }{\partial Y} u^2 \quad\quad\quad\text{where } u = T - Y \text{ and } \frac{d}{dY} (T - Y) = -1 = \frac{du}{dY}\\
+		&= \frac{1}{2} \cdot -\frac{\partial }{\partial u} u^2 \quad\quad\text{where } \frac{d}{dY} = \frac{d}{dY}\frac{du}{du} = \frac{du}{dY}\frac{d}{du} = -\frac{d}{du}\\
+		&= \frac{1}{2} \cdot -2u\\
+		&= -u\\
+		&= -(T - Y)
+	\end{align*}
+	\begin{align*}
+		\frac{\partial Y}{\partial W} &= \frac{\partial}{\partial W} Y\\
+		&= \frac{\partial}{\partial W} f_{act}(WX^T) \quad\text{Assuming linear activation function where } f_{act}(S_i) = S_i\\
+		&= \frac{\partial}{\partial W} WX^T\\
+		&= X^T
+	\end{align*}\begin{minipage}{0.45\textwidth}
+		\begin{align*}
+			\Delta E_{wh} &= \frac{\partial E_{wh}'}{\partial W}\\
+			&= \frac{\partial E_{wh}'}{\partial W} \cdot \frac{\partial Y}{\partial Y}\\
+			&= \frac{\partial E_{wh}'}{\partial Y} \cdot \frac{\partial Y}{\partial W}\\
+			&= -(T - Y) \cdot X^T\\
+			&= -X^T(T - Y)
+		\end{align*}	
+	\end{minipage}\begin{minipage}{0.45\textwidth}
+		\begin{align*}
+			\Delta W_{wh} &= - \eta \times \Delta E_{wh}\\
+			&= -\eta \times -X^T(T - Y)\\
+			&= \eta \times X^T \times (T - Y)\\
+			&= \eta \times X^T \times E_{wh} \quad\quad\text{Assuming $E_{wh} = T - Y$}
+		\end{align*}
+	\end{minipage}
+	
+	\hspace{1em}\\\\Now, given error signal $\frac{1}{2}(T - Y)^2$, we can simply reference the above formula when updating weights during backpropagation assuming linear forwardpropagation.\\
+
+	For us to compute $\Delta W_{wh}$ with other activation functions, we would have to recompute $\frac{\partial Y}{\partial W}$ where $Y = f_{act}$ is not defined as $f_{act}(s_i) = S$.
+
+\newpage\thispagestyle{empty}
+\section*{Widrow-Hoff Learning / $(\eta, X, T, Y, W_{XY}) \Rightarrow W_{XY}'$}
+
+	\begin{itemize}
+		\item AKA Delta Learning Rule
+		\item Replicates operant conditioning
+		\item Not biologically plausible
+		\item Algorithm for backpropagation
+	\end{itemize}
+
+	Assuming:
+		$
+			\eta = 0.1,
+			\quad X = [2, 3],
+			\quad T = [13, 17],
+			\quad Y = [11, 16],
+			\quad W_{XY} = \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix}
+		$
+
+	\textbf{Calculate error vector / $(T, Y) \Rightarrow E$}
+	\begin{align*}
+		E &= T - Y\\
+		&= [13, 17] - [11, 16]\\
+		&= [2, 1]
+	\end{align*}
+
+	\textbf{Calculate weight delta vector / $(\eta, E, X) \Rightarrow \Delta W_{XY}$}
+	\begin{align*}
+		\Delta W_{XY} &= \eta \times X^T \times E\\
+		&= 0.1 \times \begin{bmatrix}2\\1\end{bmatrix} \begin{bmatrix}2,3\end{bmatrix}\\
+		&= 0.1 \times \begin{bmatrix}(2)(2) & (2)(3)\\(1)(2) & (1)(3)\end{bmatrix}\\
+		&= \begin{bmatrix}0.4 & 0.6\\0.2 & 0.3\end{bmatrix}
+	\end{align*}
+	
+	\textbf{Calculate final weight vector / $(W_{XY}, \Delta W_{XY}) \Rightarrow W_{XY}'$}
+	\begin{align*}
+		W_{XY}' &= W_{XY} + \Delta W_{XY}\\
+		&= \begin{bmatrix}4 & 5\\0 & -2\end{bmatrix} + \begin{bmatrix}0.4 & 0.6\\0.2 & 0.3\end{bmatrix}\\
+		&= \begin{bmatrix}4.4 & 5.6\\0.2 & -1.7\end{bmatrix}
+	\end{align*}
+
+\end{document}

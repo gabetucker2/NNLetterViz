@@ -12,9 +12,10 @@ from collections import defaultdict
 import numpy as np 
 
 ##################################################################
+# Initialize
 
 debug.log.indent_level = 0
-debug.log.procedure("Setting up variables...")
+debug.log.procedure("Setting up layers...")
 
 I = len(math_funcs.matrix_to_vector(list(letter_data.letter_variants.values())[0][0]))
 HN = params.num_neurons_per_hidden_layer
@@ -25,11 +26,11 @@ layer_sizes = [I] + [HN] * HM + [O]
 if params.enable_visuals:
     render.initialize_network_canvas(layer_sizes)
 
-epoch_letter_accuracies = []
-
 ##################################################################
 
 debug.log.procedure("Beginning simulation...")
+
+epoch_letter_accuracies = []
 debug.log.indent_level += 1
 for epoch in range(params.num_epochs):
 
@@ -123,6 +124,11 @@ debug.log.indent_level -= 1
 
 ##################################################################
 
+if params.enable_visuals:
+    render.exec_app()
+
+##################################################################
+
 debug.log.analysis("Beginning analytics...")
 debug.log.analysis("Computing average accuracies across all epochs and letters...")
 total_correct = 0
@@ -172,8 +178,3 @@ for letter in sorted(per_letter_results.keys()):
     debug.log.analysis(f"Letter '{letter}' accuracy: {letter_avg:.2%}")
     debug.log.analysis(f"Letter '{letter}' delta from baseline: {letter_delta:.2%}")
 debug.log.indent_level -= 1
-
-##################################################################
-
-if params.enable_visuals:
-    render.exec_app()
