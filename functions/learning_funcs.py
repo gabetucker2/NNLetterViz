@@ -151,72 +151,78 @@ def semisup_norm_hebbian_learning_deep(X, W_XY_matrix, Y=None, T=None):
     return W_matrix_new
 
 def widrow_hoff_learning(X, W_XY, Y=None, T=None):
-    """
-    output: W_new
-    """
     X = np.array(X)
     Y = np.array(Y)
     T = np.array(T)
-
     E = T - Y
-
-    ΔW_XY = params.μ * np.outer(X, E)
-
-    W_new = W_XY + ΔW_XY
-
-    return axon_funcs.clip_weights(W_new)
+    ΔW_XY = params.μ * np.outer(E, X)
+    return axon_funcs.clip_weights(W_XY + ΔW_XY)
 
 def widrow_hoff_learning_deep(X, W_XY_matrix, Y=None, T=None):
-    if Y is None:
-        Y = fwd_prop_funcs.fwd_prop_deep(X, W_XY_matrix, return_all_layers=True)
+    debug.log.indent_level += 1
+    try:
+        # Forward propagate if no activations are passed in
+        if Y is None:
+            Y = fwd_prop_funcs.fwd_prop_deep(X, W_XY_matrix, return_all_layers=True)
 
-    Activations = [np.array(X)] + [np.array(y) for y in Y]
-    num_layers = len(W_XY_matrix)
-    Deltas = [None] * num_layers
+        # Format inputs
+        T = np.array(T).reshape(-1)
+        Activations = [np.array(y) for y in Y]
+        Inputs = Activations[:-1]
+        num_layers = len(W_XY_matrix)
 
-    # Handle output layer delta explicitly
-    A_last = Activations[-1]
-    T = np.array(T)
-    Act_deriv_last = params.activation_function(A_last, derivative=True, from_output=True)
-    Deltas[-1] = (T - A_last) * Act_deriv_last
-
-    # Recursive backpropagation for hidden layers
-    def backprop_recursive(l):
-        if l < 0:
-            return
-
-        A_l = Activations[l + 1]
-        W_next = W_XY_matrix[l + 1]
-        Δ_next = Deltas[l + 1]
-
-        Act_deriv = params.activation_function(A_l, derivative=True, from_output=False)
-
-        if W_next.shape[1] != Δ_next.shape[0]:
-            debug.log.error(f"[LAYER {l}] Δ_next shape {Δ_next.shape} does not match W_next output dim {W_next.shape[1]}")
-            return
-
-        if W_next.shape[0] != A_l.shape[0]:
-            debug.log.error(f"[LAYER {l}] activation shape {A_l.shape} does not match W_next input dim {W_next.shape[0]}")
-            return
-
-        Deltas[l] = (W_next @ Δ_next) * Act_deriv
-        backprop_recursive(l - 1)
-
-    backprop_recursive(num_layers - 2)  # Recurse from second-to-last layer
-
-    # Weight updates
-    W_matrix_new = []
-    for i in range(num_layers):
-        Input_to_layer = Activations[i]
-        Error_signal = Deltas[i]
-        W_XY = W_XY_matrix[i]
-
-        if Input_to_layer.ndim != 1 or Error_signal.ndim != 1:
-            debug.log.error(f"Inputs to outer product must be vectors. Got {Input_to_layer.shape}, {Error_signal.shape}")
+        # Validate that each weight layer has a corresponding activation transition
+        if len(Activations) != num_layers + 1:
+            debug.log.error(f"[LAYER COUNT ERROR] Got {len(Activations)} activations but expected {num_layers + 1} for {num_layers} weight layers.")
             return W_XY_matrix
 
-        ΔW_XY = params.μ * np.outer(Input_to_layer, Error_signal)
-        W_new = W_XY + ΔW_XY
-        W_matrix_new.append(axon_funcs.clip_weights(W_new))
+        # Initialize delta array
+        Deltas = [None] * num_layers
 
-    return W_matrix_new
+        # Output layer delta
+        A_out = Activations[-1]
+        d_out = params.activation_function(A_out, derivative=True, from_output=True)
+        error = T - A_out
+        Deltas[-1] = error * d_out
+
+        # Backpropagate deltas
+        for l in reversed(range(num_layers - 1)):
+            W_next = W_XY_matrix[l + 1]
+            Δ_next = Deltas[l + 1]
+
+            A_l = Activations[l + 1]
+            d_l = np.array([params.activation_function(y, derivative=True, from_output=False) for y in A_l])
+
+
+            backprop_signal = W_next.T @ Δ_next
+
+            if backprop_signal.shape != d_l.shape:
+                debug.log.error(f"[SHAPE ERROR] Layer {l}: backprop_signal {backprop_signal.shape} vs activation derivative {d_l.shape}")
+                return W_XY_matrix
+
+            Deltas[l] = backprop_signal * d_l
+
+        # Update weights
+        W_matrix_new = []
+        for i in range(num_layers):
+            a_in = Inputs[i].reshape(-1)
+            delta = Deltas[i].reshape(-1)
+            ΔW = params.μ * np.outer(delta, a_in)
+
+            expected_shape = W_XY_matrix[i].shape
+            if ΔW.shape != expected_shape:
+                debug.log.error(f"[ΔW SHAPE ERROR] Layer {i}: ΔW shape {ΔW.shape} does not match expected weight shape {expected_shape}")
+                debug.log.error(f"  Input shape: {a_in.shape}, Delta shape: {delta.shape}")
+                return W_XY_matrix
+
+            W_updated = W_XY_matrix[i] + ΔW
+            W_clipped = axon_funcs.clip_weights(W_updated)
+            W_matrix_new.append(W_clipped)
+
+            debug.log.axons(f"[UPDATE] Layer {i}: ΔW applied with shape {ΔW.shape}")
+
+        return W_matrix_new
+
+    finally:
+        debug.log.indent_level -= 1
+        

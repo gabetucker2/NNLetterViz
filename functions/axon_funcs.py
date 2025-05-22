@@ -12,7 +12,7 @@ def init_axon_val():
 
 def get_axons(I, HN, HM, O):
     def new_layer(n_in, n_out):
-        return np.array([[init_axon_val() for _ in range(n_out)] for _ in range(n_in)])
+        return np.array([[init_axon_val() for _ in range(n_in)] for _ in range(n_out)])
     
     # perceptron case
     if HM == 0:

@@ -12,11 +12,11 @@ train_test_split_ratio = 0.94
 # NN learning params
 μ = 0.01
 num_hidden_layers = 2
-num_neurons_per_hidden_layer = 64
+num_neurons_per_hidden_layer = 66
 
 # NN algorithms
-learning_algorithm = learning_funcs.semisup_norm_hebbian_learning
-learning_algorithm_deep = learning_funcs.semisup_norm_hebbian_learning_deep
+learning_algorithm = learning_funcs.widrow_hoff_learning
+learning_algorithm_deep = learning_funcs.widrow_hoff_learning_deep
 activation_function = activation_funcs.activation_function_linear
 
 # NN noise
@@ -27,7 +27,7 @@ noise_function = noise_funcs.normal_noise
 init_axon_mean = 0
 init_axon_sd = 0.6
 
-axon_weight_max_dev = 10
+axon_weight_max_dev = 99999999
 
 # misc
 max_print_repeats = 99999

@@ -52,9 +52,11 @@ for epoch in range(params.num_epochs):
 
     debug.log.axons("Initializing axon conductances...")
     W_layers = axon_funcs.get_axons(I, HN, HM, O)
+    for i, W in enumerate(W_layers):
+        debug.log.axons(f"[CHECK] W[{i}] shape: {W.shape}")
     expected_shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
     for i, (W, (n_in, n_out)) in enumerate(zip(W_layers, expected_shapes)):
-        assert W.shape == (n_in, n_out), f"[INIT ERROR] W_layers[{i}] expected shape {(n_in, n_out)}, got {W.shape}"
+        assert W.shape == (n_out, n_in), f"[INIT ERROR] W_layers[{i}] expected shape {(n_in, n_out)}, got {W.shape}"
 
     # debug.log.axons(f"Axon matrix before training:\n{W_layers}")
 
@@ -62,18 +64,43 @@ for epoch in range(params.num_epochs):
 
     debug.log.training("Beginning training...")
     debug.log.indent_level += 1
+
     for i, (actual_letter, training_matrix) in enumerate(flattened_training):
         debug.log.training(f"Training on matrix of letter type '{actual_letter}'")
 
+        # Prepare input and target
         X = math_funcs.matrix_to_vector(training_matrix)
         T = math_funcs.one_hot(actual_letter, O)
         assert X.shape == (I,), f"[TRAIN ERROR] Input X shape mismatch. Expected {(I,)}, got {X.shape}"
         assert T.shape == (O,), f"[TRAIN ERROR] Target T shape mismatch. Expected {(O,)}, got {T.shape}"
+
+        # Run forward propagation BEFORE weight update
+        outputs_before = fwd_prop_funcs.fwd_prop_deep(X, W_layers, return_all_layers=True)
+        y_before = np.array(outputs_before[-1])
+        debug.log.training(f"[DEBUG] Output before update: {y_before}")
+
+        # Save pre-update weights
+        W_before = [np.array(W.copy()) for W in W_layers]
+
+        # Perform weight update
         W_layers = params.learning_algorithm_deep(X, W_layers, T=T)
+
+        # Run forward propagation AFTER weight update
+        outputs_after = fwd_prop_funcs.fwd_prop_deep(X, W_layers, return_all_layers=True)
+        y_after = np.array(outputs_after[-1])
+        debug.log.training(f"[DEBUG] Output after update:  {y_after}")
+
+        # Log change in output and weights
+        delta_output = y_after - y_before
+        debug.log.training(f"[DEBUG] ΔOutput: {delta_output}")
+        debug.log.training(f"[DEBUG] Mean ΔOutput: {np.mean(np.abs(delta_output)):.6f}")
+
+        for l, (Wb, Wa) in enumerate(zip(W_before, W_layers)):
+            delta_W = np.abs(Wa - Wb)
+            debug.log.training(f"[DEBUG] Layer {l} ΔW: mean {np.mean(delta_W):.6f}, max {np.max(delta_W):.6f}")
 
     debug.log.indent_level -= 1
 
-    # debug.log.training(f"Matrix after training:\n{W_layers}")
 
     ##################################################################
 

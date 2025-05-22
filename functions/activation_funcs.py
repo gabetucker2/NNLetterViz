@@ -1,6 +1,9 @@
 # library imports
 import numpy as np
 
+# import scripts
+import debug
+
 # functions
 def activation_function_linear(x, derivative=False, from_output=False):
     x = np.array(x)
