@@ -27,7 +27,7 @@ noise_function = noise_funcs.normal_noise
 init_axon_mean = 0
 init_axon_sd = 0.6
 
-axon_weight_max_dev = 99999999
+axon_weight_max_dev = 99
 
 # misc
 max_print_repeats = 99999
