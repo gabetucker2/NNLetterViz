@@ -211,15 +211,13 @@ def widrow_hoff_learning_deep(X, W_XY_matrix, Y=None, T=None):
 
             expected_shape = W_XY_matrix[i].shape
             if ΔW.shape != expected_shape:
-                debug.log.error(f"[ΔW SHAPE ERROR] Layer {i}: ΔW shape {ΔW.shape} does not match expected weight shape {expected_shape}")
-                debug.log.error(f"  Input shape: {a_in.shape}, Delta shape: {delta.shape}")
+                debug.log.error(f"Layer {i}: ΔW shape {ΔW.shape} does not match expected weight shape {expected_shape}")
+                debug.log.error(f"Input shape: {a_in.shape}, Delta shape: {delta.shape}")
                 return W_XY_matrix
 
             W_updated = W_XY_matrix[i] + ΔW
             W_clipped = axon_funcs.clip_weights(W_updated)
             W_matrix_new.append(W_clipped)
-
-            debug.log.axons(f"[UPDATE] Layer {i}: ΔW applied with shape {ΔW.shape}")
 
         return W_matrix_new
 

@@ -3,15 +3,17 @@ import numpy as np
 
 # import scripts
 import param_configs.params_test as params
+import functions.activation_funcs as activation_funcs
 import debug
 
 # functions
-def fwd_prop_vector(X, W_matrix):
-    return np.array([params.activation_function(np.dot(w, X) + params.noise_function(params.axon_pot_interference)) for w in W_matrix])
+def fwd_prop_deep(X, W_4DMatrix, return_all_layers=False):
+    X_working = X
+    outputs = [X_working]  # Include input layer
 
-def fwd_prop_deep(X, W_layers, return_all_layers=False):
-    outputs = [np.array(X)]
-    for W in W_layers:
-        X = fwd_prop_vector(X, W)
-        outputs.append(X)
+    for W in W_4DMatrix:
+        Y = [activation_funcs.activation_function_sigmoid(np.dot(w_row, X_working)) for w_row in W]
+        X_working = Y
+        outputs.append(Y)
+
     return outputs if return_all_layers else outputs[-1]

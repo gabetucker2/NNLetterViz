@@ -77,7 +77,6 @@ for epoch in range(params.num_epochs):
         # Run forward propagation BEFORE weight update
         outputs_before = fwd_prop_funcs.fwd_prop_deep(X, W_layers, return_all_layers=True)
         y_before = np.array(outputs_before[-1])
-        debug.log.training(f"[DEBUG] Output before update: {y_before}")
 
         # Save pre-update weights
         W_before = [np.array(W.copy()) for W in W_layers]
@@ -88,16 +87,12 @@ for epoch in range(params.num_epochs):
         # Run forward propagation AFTER weight update
         outputs_after = fwd_prop_funcs.fwd_prop_deep(X, W_layers, return_all_layers=True)
         y_after = np.array(outputs_after[-1])
-        debug.log.training(f"[DEBUG] Output after update:  {y_after}")
 
         # Log change in output and weights
         delta_output = y_after - y_before
-        debug.log.training(f"[DEBUG] ΔOutput: {delta_output}")
-        debug.log.training(f"[DEBUG] Mean ΔOutput: {np.mean(np.abs(delta_output)):.6f}")
 
         for l, (Wb, Wa) in enumerate(zip(W_before, W_layers)):
             delta_W = np.abs(Wa - Wb)
-            debug.log.training(f"[DEBUG] Layer {l} ΔW: mean {np.mean(delta_W):.6f}, max {np.max(delta_W):.6f}")
 
     debug.log.indent_level -= 1
 
