@@ -822,7 +822,7 @@ Z_matrices = [
     ],
 ]
 
-letterVariants = {
+letter_variants = {
     "A": A_matrices,
     "C": C_matrices,
     "Z": Z_matrices,

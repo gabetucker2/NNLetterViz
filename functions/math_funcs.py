@@ -1,6 +1,5 @@
 # import scripts
-import debug
-import data.letterData as letterData
+import data.letter_data as letter_data
 
 # import libraries
 import math
@@ -9,12 +8,8 @@ from collections import defaultdict
 import numpy as np
 
 # math functions
-def matrix_to_vector(matrix):   
-    flattened_vector = []
-    for element in matrix:
-        flattened_vector.extend(element)
-
-    return flattened_vector
+def matrix_to_vector(matrix):
+    return np.array(matrix).flatten()
 
 def vector_to_matrix(vector):
     length = len(vector)
@@ -33,28 +28,28 @@ def mean(array):
     return sum(array) / len(array)
 
 def dot_product(v1, v2):
-    sum = 0
-    for i in enumerate(v1):
-        sum += v1[i]*v2[i]
-    return sum
+    total = 0
+    for i in range(len(v1)):
+        total += v1[i] * v2[i]
+    return total
 
-def shuffle_split(letterVariants, ratio):
+def shuffle_split(letter_variants, ratio):
     all_data = []
 
-    # Flatten all letter samples into (label, matrix) pairs
-    for letter, matrices in letterVariants.items():
+    # flatten letter samples into [label, matrix] pairs
+    for letter, matrices in letter_variants.items():
         for matrix in matrices:
             all_data.append((letter, matrix))
 
-    # Shuffle the full list
+    # shuffle the list
     random.shuffle(all_data)
 
-    # Split
+    # pplit
     split_idx = int(len(all_data) * ratio)
     train_raw = all_data[:split_idx]
     test_raw = all_data[split_idx:]
 
-    # Group back by letter
+    # group back by letter
     train = defaultdict(list)
     test = defaultdict(list)
 
@@ -65,13 +60,13 @@ def shuffle_split(letterVariants, ratio):
 
     return train, test
 
-def per_class_shuffle_split(letterVariants, train_ratio):
+def per_class_shuffle_split(letter_variants, train_ratio):
     from random import shuffle
 
     train_split = {}
     test_split = {}
 
-    for letter, matrices in letterVariants.items():
+    for letter, matrices in letter_variants.items():
         shuffled = matrices.copy()
         shuffle(shuffled)
         split_index = int(len(shuffled) * train_ratio)
@@ -82,6 +77,6 @@ def per_class_shuffle_split(letterVariants, train_ratio):
 
 def one_hot(letter, num_classes):
     vec = np.zeros(num_classes)
-    index = list(letterData.letterVariants.keys()).index(letter)
+    index = list(letter_data.letter_variants.keys()).index(letter)
     vec[index] = 1.0
     return vec

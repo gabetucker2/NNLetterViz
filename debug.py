@@ -1,5 +1,5 @@
 # import functions
-import paramConfigs.paramsTest as params
+import param_configs.params_test as params
 
 # import libraries
 import os
@@ -22,9 +22,9 @@ class LogFormatter:
     def track(self, base_msg: str) -> int:
         self.message_counts[base_msg] += 1
         count = self.message_counts[base_msg]
-        if count == params.maxPrintRepeats:
+        if count == params.max_print_repeats:
             return 1
-        elif count > params.maxPrintRepeats:
+        elif count > params.max_print_repeats:
             return 2
         return 0
 
@@ -49,7 +49,7 @@ class Log:
         if suppression_state == 0:
             print(msg)
         elif suppression_state == 1:
-            print(f"{msg} {Fore.WHITE}[SUPPRESSED AFTER {params.maxPrintRepeats} REPEATS]{Style.RESET_ALL}")
+            print(f"{msg} {Fore.WHITE}[SUPPRESSED AFTER {params.max_print_repeats} REPEATS]{Style.RESET_ALL}")
         # suppression_state == 2: do not print
 
     def _log(self, message: str, tag: str, color: str = "", show_caller: bool = False, stack_depth: int = 1):
@@ -94,8 +94,8 @@ class Log:
     def testing(self, msg: str): self._log(msg, "TESTING", "white")
     def analysis(self, msg: str): self._log(msg, "ANALYSIS", "cyan")
 
-    def fwdProp(self, msg: str): self._log(msg, "FWDPROP", "lightmagenta_ex")
-    def backProp(self, msg: str): self._log(msg, "BACKPROP", "lightblue_ex")
+    def fwd_prop(self, msg: str): self._log(msg, "FWDPROP", "lightmagenta_ex")
+    def back_prop(self, msg: str): self._log(msg, "BACKPROP", "lightblue_ex")
 
     def axons(self, msg: str): self._log(msg, "AXONS", "lightblack_ex")
 
