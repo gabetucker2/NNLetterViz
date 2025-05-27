@@ -378,7 +378,7 @@ def activation_function_sigmoid(x, derivative=False, from_output=False):
 - `output`:             `1 / (1 + exp(-x))`
 - `derivative`:         `s * (1 - s)` or `x * (1 - x)` if `from_output=True`
 
-# Notebook D) Implementing and Analyzing Learning Functions
+# Notebook D) Implementing Learning Functions
 
 ## Step D1: Unsupervised Hebbian Learning
 
@@ -387,78 +387,20 @@ def activation_function_sigmoid(x, derivative=False, from_output=False):
 Let's implement this rule programatically.  And when we do so, we will include a shallow (`unsup_hebbian_learning`) and a deep (`unsup_hebbian_learning_deep`) version in order to ensure we can perform multi-layer Hebbian learning with ease from other scripts in our framework:
 
 ```
-def unsup_hebbian_learning(X, W, Y=None, T=None):
-
-    X = np.array(X)
-    Y = np.array(Y)
-
-    ΔW = params.μ * np.outer(Y, X)
-
-    W_new = W + ΔW
-
-    return axon_funcs.clip_weights(W_new)
-
-def unsup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
-
-    X_working = np.array(X.copy())
-    W_matrix_new = []
-
-    debug.log.indent_level += 1
-    for i, W in enumerate(W_matrix):
-        Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
-        W_new = unsup_hebbian_learning(X_working, W, Y=Y_layer)
-        W_matrix_new.append(W_new)
-        X_working = Y_layer
-    debug.log.indent_level -= 1
-
-    return W_matrix_new
-```
-
-
-
-## Step D2: Unsupervised Normalized Hebbian Learning
-
-Next, let's implement a version with the algorithm's membrane potentials normalized using Euclidean normalization in order to more smoothly prevent weight explosion than purely by using our `clip_weights` function.
-
-```
-def unsup_norm_hebbian_learning(X, W, Y=None, T=None):
-
-    X = np.array(X)
-    Y = np.array(Y)
-
-    X_norm = axon_funcs.euc_normalize_membrane_pots(X)
-    Y_norm = axon_funcs.euc_normalize_membrane_pots(Y)
-
-    ΔW = params.μ * np.outer(Y_norm, X_norm)
-
-    W_new = W + ΔW
-
-    return axon_funcs.clip_weights(W_new)
-
-def unsup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
-
-    ...
-```
-
-## Step D3: Semi-Supervised Hebbian Learning
-
-![images/latex_semiheb.png](images/latex_semiheb.png)
-
-```
-def semisup_hebbian_learning(X, W, Y=None, T=None):
+def unsup_hebbian_learning(X, W_XY, Y=None, T=None):
     """
     output: W_new
     """
     X = np.array(X)
-    T = np.array(T)
+    Y = np.array(Y)
 
-    ΔW = params.μ * np.outer(T, X)
-    
-    W_new = W + ΔW
+    ΔW_XY = params.μ * np.outer(Y, X)
+
+    W_new = W_XY + ΔW_XY
 
     return axon_funcs.clip_weights(W_new)
 
-def semisup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
+def unsup_hebbian_learning_deep(X, W_XY_matrix, Y=None, T=None):
     """
     output: W_matrix_new
     """
@@ -466,13 +408,88 @@ def semisup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
     W_matrix_new = []
 
     debug.log.indent_level += 1
-    for i, W in enumerate(W_matrix):
-        if i < len(W_matrix) - 1:
-            Y_layer = np.array([fwd_prop_funcs.fwd_prop_single(X_working, w_row) for w_row in W])
-            W_new = unsup_hebbian_learning(X_working, W, Y=Y_layer)
+    for i, W_XY in enumerate(W_XY_matrix):
+        Y_layer = fwd_prop_funcs.fwd_prop(X_working, W_XY)
+        W_new = unsup_hebbian_learning(X_working, W_XY, Y=Y_layer)
+        W_matrix_new.append(W_new)
+        X_working = Y_layer
+    debug.log.indent_level -= 1
+
+    return W_matrix_new
+```
+
+## Step D2: Unsupervised Normalized Hebbian Learning
+
+Next, let's implement a version with the algorithm's membrane potentials normalized using Euclidean normalization in order to more smoothly prevent weight explosion than purely by using our `clip_weights` function.
+
+```
+def unsup_norm_hebbian_learning(X, W_XY, Y=None, T=None):
+    """
+    output: W_new
+    """
+    X = np.array(X)
+    Y = np.array(Y)
+
+    X_norm = axon_funcs.euc_normalize_membrane_pots(X)
+    Y_norm = axon_funcs.euc_normalize_membrane_pots(Y)
+
+    ΔW_XY = params.μ * np.outer(Y_norm, X_norm)
+
+    W_new = W_XY + ΔW_XY
+
+    return axon_funcs.clip_weights(W_new)
+
+def unsup_norm_hebbian_learning_deep(X, W_XY_matrix, Y=None, T=None):
+    """
+    output: W_matrix_new
+    """
+    X_working = np.array(X.copy())
+    W_matrix_new = []
+
+    debug.log.indent_level += 1
+    for i, W_XY in enumerate(W_XY_matrix):
+        Y_layer = fwd_prop_funcs.fwd_prop(X_working, W_XY)
+        W_new = unsup_norm_hebbian_learning(X_working, W_XY, Y=Y_layer)
+        W_matrix_new.append(W_new)
+        X_working = Y_layer
+    debug.log.indent_level -= 1
+
+    return W_matrix_new
+```
+
+## Step D3: Semi-Supervised Hebbian Learning
+
+![images/latex_semiheb.png](images/latex_semiheb.png)
+
+```
+def semisup_hebbian_learning(X, W_XY, Y=None, T=None):
+    """
+    output: W_new
+    """
+    X = np.array(X)
+    T = np.array(T)
+
+    ΔW_XY = params.μ * np.outer(T, X)
+    
+    W_new = W_XY + ΔW_XY
+
+    return axon_funcs.clip_weights(W_new)
+
+def semisup_hebbian_learning_deep(X, W_XY_matrix, Y=None, T=None):
+    """
+    output: W_matrix_new
+    """
+    X_working = np.array(X.copy())
+    W_matrix_new = []
+
+    debug.log.indent_level += 1
+    for i, W_XY in enumerate(W_XY_matrix):
+        if i < len(W_XY_matrix) - 1:
+            Y_layer = fwd_prop_funcs.fwd_prop(X_working, W_XY)
+            W_new = unsup_hebbian_learning(X_working, W_XY, Y=Y_layer)
             X_working = Y_layer
         else:
-            W_new = semisup_hebbian_learning(X_working, W, T=T)
+            W_new = semisup_hebbian_learning(X_working, W_XY, T=T)
         W_matrix_new.append(W_new)
     debug.log.indent_level -= 1
 
@@ -482,7 +499,7 @@ def semisup_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
 ## Step D4: Semi-Supervised Normalized Hebbian Learning
 
 ```
-def semisup_norm_hebbian_learning(X, W, Y=None, T=None):
+def semisup_norm_hebbian_learning(X, W_XY, Y=None, T=None):
     """
     output: W_new
     """
@@ -490,14 +507,30 @@ def semisup_norm_hebbian_learning(X, W, Y=None, T=None):
     T = np.array(T)
 
     X_norm = X / (np.linalg.norm(X) + 1e-8)
-    ΔW = params.μ * np.outer(T, X_norm)
-    W_new = W + ΔW
+    ΔW_XY = params.μ * np.outer(T, X_norm)
+    W_new = W_XY + ΔW_XY
 
     return axon_funcs.clip_weights(W_new)
 
-def semisup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
+def semisup_norm_hebbian_learning_deep(X, W_XY_matrix, Y=None, T=None):
+    """
+    output: W_matrix_new
+    """
+    X_working = np.array(X.copy())
+    W_matrix_new = []
 
-    ...
+    debug.log.indent_level += 1
+    for i, W_XY in enumerate(W_XY_matrix):
+        if i < len(W_XY_matrix) - 1:
+            Y_layer = fwd_prop_funcs.fwd_prop(X_working, W_XY)
+            W_new = unsup_norm_hebbian_learning(X_working, W_XY, Y=Y_layer)
+            X_working = Y_layer
+        else:
+            W_new = semisup_norm_hebbian_learning(X_working, W_XY, T=T)
+        W_matrix_new.append(W_new)
+    debug.log.indent_level -= 1
+
+    return W_matrix_new
 ```
 
 ## Step D5: Supervised Widrow-Hoff Learning
@@ -506,53 +539,146 @@ def semisup_norm_hebbian_learning_deep(X, W_matrix, Y=None, T=None):
 ![images/latex_widhof.png](images/latex_widhof.png)
 
 ```
-def widrow_hoff_learning(X, W, Y=None, T=None):
-    """
-    output: W_new
-    """
-    X = np.array(X)
-    Y = np.array(Y)
-    T = np.array(T)
+def widrow_hoff_learning_deep(X, W_XY_matrix, Y=None, T=None):
+    debug.log.indent_level += 1
+    try:
+        # Forward propagate if no activations are passed in
+        if Y is None:
+            Y = fwd_prop_funcs.fwd_prop_deep(X, W_XY_matrix, return_all_layers=True)
 
-    dY = params.activation_function(Y, derivative=True, from_output=True)
-    Delta = (T - Y) * dY
-    ΔW = params.μ * np.outer(Delta, X)
+        # Format inputs
+        T = np.array(T).reshape(-1)
+        Activations = [np.array(y) for y in Y]
+        Inputs = Activations[:-1]
+        num_layers = len(W_XY_matrix)
 
-    W_new = np.array(W) + ΔW
+        # Validate that each weight layer has a corresponding activation transition
+        if len(Activations) != num_layers + 1:
+            debug.log.error(f"[LAYER COUNT ERROR] Got {len(Activations)} activations but expected {num_layers + 1} for {num_layers} weight layers.")
+            return W_XY_matrix
 
-    return axon_funcs.clip_weights(W_new)
+        # Initialize delta array
+        Deltas = [None] * num_layers
 
-def widrow_hoff_learning_deep(X, W_matrix, Y=None, T=None):
-    """
-    output: W_matrix_new
-    """
-    if Y is None:
-        Y = fwd_prop_funcs.fwd_prop_deep(X, W_matrix, return_all_layers=True)
+        # Output layer delta
+        A_out = Activations[-1]
+        d_out = params.back_activation_function(A_out)
+        error = T - A_out
+        Deltas[-1] = error * d_out
 
-    Activations = [np.array(X)] + [np.array(Y_i) for Y_i in Y]
-    num_layers = len(W_matrix)
-    Deltas = [None] * num_layers
+        # Backpropagate deltas
+        for l in reversed(range(num_layers - 1)):
+            W_next = W_XY_matrix[l + 1]
+            Δ_next = Deltas[l + 1]
 
-    Y_output = np.array(Y[-1])
-    T = np.array(T)
-    Act_deriv_output = np.array([params.activation_function(Y_i, derivative=True, from_output=True) for Y_i in Y_output])
-    Deltas[-1] = (T - Y_output) * Act_deriv_output
+            A_l = Activations[l + 1]
+            d_l = np.array([params.back_activation_function(y) for y in A_l])
 
-    for l in reversed(range(num_layers - 1)):
-        W_next = np.array(W_matrix[l + 1])
-        Δnext = Deltas[l + 1]
-        Y_l = np.array(Y[l])
-        Act_deriv = np.array([params.activation_function(Y_i, derivative=True, from_output=True) for Y_i in Y_l])
-        Deltas[l] = (W_next.T @ Δnext) * Act_deriv
+            backprop_signal = W_next.T @ Δ_next
 
-    W_matrix_new = []
-    for i in range(num_layers):
-        Input_to_layer = Activations[i]
-        W = np.array(W_matrix[i])
-        Error_signal = Deltas[i]
-        ΔW = params.μ * np.outer(Error_signal, Input_to_layer)
-        W_new = W + ΔW
-        W_matrix_new.append(W_new)
+            if backprop_signal.shape != d_l.shape:
+                debug.log.error(f"[SHAPE ERROR] Layer {l}: backprop_signal {backprop_signal.shape} vs activation derivative {d_l.shape}")
+                return W_XY_matrix
 
-    return W_matrix_new
+            Deltas[l] = backprop_signal * d_l
+
+        # Update weights
+        W_matrix_new = []
+        for i in range(num_layers):
+            a_in = Inputs[i].reshape(-1)
+            delta = Deltas[i].reshape(-1)
+            ΔW = params.μ * np.outer(delta, a_in)
+
+            expected_shape = W_XY_matrix[i].shape
+            if ΔW.shape != expected_shape:
+                debug.log.error(f"Layer {i}: ΔW shape {ΔW.shape} does not match expected weight shape {expected_shape}")
+                debug.log.error(f"Input shape: {a_in.shape}, Delta shape: {delta.shape}")
+                return W_XY_matrix
+
+            W_updated = W_XY_matrix[i] + ΔW
+            W_clipped = axon_funcs.clip_weights(W_updated)
+            W_matrix_new.append(W_clipped)
+
+        return W_matrix_new
+
+    finally:
+        debug.log.indent_level -= 1
 ```
+
+## Notebook E) Analysis
+
+All forms of Unsupervised Hebbian Learning were incapable of increasing the model's accuracy from the control in a way that was meaningful when it comes to predicting letters, which is to be expected because pure unsupervised learning is incapable of backpropagating an error signal.
+
+Semi-supervised learning was again statistically insignificant when our delta was unnormalized.  But upon normalizing the delta and using a linear activation funcction, its accuracy increased from merely matching our control's accuracy to approximately 36.00% (a 2.67% increase in accuracy from our control), indicating that although semi-supervised learning was technically able to learn, our model lacks the necessary prerequisites in order for it to be a viable strategy for learning.  The following parameter configuration performed best:
+
+```
+μ = 0.05
+num_hidden_layers = 1
+num_neurons_per_hidden_layer = 128
+
+learning_algorithm = learning_funcs.semisup_norm_hebbian_learning
+learning_algorithm_deep = learning_funcs.semisup_norm_hebbian_learning_deep
+
+fwd_activation_function = activation_funcs.activation_linear
+back_activation_function = activation_funcs.activation_sigmoid_linear
+
+init_axon_mean = 0
+init_axon_sd = 0.6
+axon_weight_max_dev = 9999
+```
+
+```
+[ANALYSIS] Number of epochs: 1000
+[ANALYSIS] Average model accuracy across 1000 epochs: 36.00%
+[ANALYSIS] Model accuracy delta: 2.67% (36.00% model accuracy vs 33.33% random guess accuracy)
+[ANALYSIS] Average accuracy per letter:
+  |[ANALYSIS] Letter 'A' accuracy: 37.90%
+  |[ANALYSIS] Letter 'A' delta from baseline: 4.57%
+  |[ANALYSIS] Letter 'C' accuracy: 35.45%
+  |[ANALYSIS] Letter 'C' delta from baseline: 2.12%
+  |[ANALYSIS] Letter 'Z' accuracy: 34.65%
+  |[ANALYSIS] Letter 'Z' delta from baseline: 1.32%
+```
+
+Widrow-Hoff Learning was far and away the best-performing learning algorithm for this task because it was capable of backpropagating an error signal through multiple layers and was designed for exactly this kind of task.  The parameter configuration which performed best was the following:
+
+![images/Atestsemi.png](images/Atestsemi.png)
+![images/Ctestsemi.png](images/Ctestsemi.png)
+![images/Ztestsemi.png](images/Ztestsemi.png)
+
+```
+μ = 0.01
+num_hidden_layers = 2
+num_neurons_per_hidden_layer = 128
+
+learning_algorithm = learning_funcs.widrow_hoff_learning
+learning_algorithm_deep = learning_funcs.widrow_hoff_learning_deep
+
+fwd_activation_function = activation_funcs.activation_sigmoid
+back_activation_function = activation_funcs.activation_linear_derivative
+
+init_axon_mean = 0
+init_axon_sd = 0.6
+axon_weight_max_dev = 3
+```
+
+```
+[ANALYSIS] Number of epochs: 1000
+[ANALYSIS] Average model accuracy across 1000 epochs: 65.20%
+[ANALYSIS] Model accuracy delta: 31.87% (65.20% model accuracy vs 33.33% random guess accuracy)
+[ANALYSIS] Average accuracy per letter:
+  |[ANALYSIS] Letter 'A' accuracy: 78.35%
+  |[ANALYSIS] Letter 'A' delta from baseline: 45.02%
+  |[ANALYSIS] Letter 'C' accuracy: 53.85%
+  |[ANALYSIS] Letter 'C' delta from baseline: 20.52%
+  |[ANALYSIS] Letter 'Z' accuracy: 63.40%
+  |[ANALYSIS] Letter 'Z' delta from baseline: 30.07%
+```
+
+And peeking at the network within one trial using our visualization code:
+
+![images/Atestwid.png](images/Atestwid.png)
+![images/Cteswidt.png](images/Ctestwid.png)
+![images/Zteswidt.png](images/Ztestwid.png)
+
+A 31.87% increase in accuracy from the control—33.33% accuracy—to 65.20% accuracy is substantial considering constraints on our data (only 28 training matrices per letter and 64-dimensional data).

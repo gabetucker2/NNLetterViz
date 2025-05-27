@@ -4,20 +4,20 @@ import functions.activation_funcs as activation_funcs
 import functions.noise_funcs as noise_funcs
 
 # epochs
-num_epochs = 1000
+num_epochs = 30
 
 # training/testing data
 train_test_split_ratio = 0.94
 
 # NN learning params
-μ = 0.05
-num_hidden_layers = 1
+μ = 0.01
+num_hidden_layers = 2
 num_neurons_per_hidden_layer = 128
 
 # NN algorithms
-learning_algorithm = learning_funcs.semisup_norm_hebbian_learning
-learning_algorithm_deep = learning_funcs.semisup_norm_hebbian_learning_deep
-fwd_activation_function = activation_funcs.activation_linear
+learning_algorithm = learning_funcs.widrow_hoff_learning
+learning_algorithm_deep = learning_funcs.widrow_hoff_learning_deep
+fwd_activation_function = activation_funcs.activation_sigmoid
 back_activation_function = activation_funcs.activation_linear_derivative
 
 # NN noise
@@ -27,7 +27,7 @@ noise_function = noise_funcs.normal_noise
 # NN axon conductances
 init_axon_mean = 0
 init_axon_sd = 0.6
-axon_weight_max_dev = 9999
+axon_weight_max_dev = 3
 
 # misc
 max_print_repeats = 999999

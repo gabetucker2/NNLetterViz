@@ -6,6 +6,7 @@ import debug
 import param_configs.params_test as params
 import functions.fwd_prop_funcs as fwd_prop_funcs
 import functions.axon_funcs as axon_funcs
+import functions.activation_funcs as activation_funcs
 
 # general functions
 def learn(X, W_XY, Y=None, T=None):
@@ -28,7 +29,7 @@ def unsup_hebbian_learning(X, W_XY, Y=None, T=None):
     X = np.array(X)
     Y = np.array(Y)
 
-    ΔW_XY = params.μ * np.outer(X, Y)
+    ΔW_XY = params.μ * np.outer(Y, X)
 
     W_new = W_XY + ΔW_XY
 
@@ -61,7 +62,7 @@ def unsup_norm_hebbian_learning(X, W_XY, Y=None, T=None):
     X_norm = axon_funcs.euc_normalize_membrane_pots(X)
     Y_norm = axon_funcs.euc_normalize_membrane_pots(Y)
 
-    ΔW_XY = params.μ * np.outer(X_norm, Y_norm)
+    ΔW_XY = params.μ * np.outer(Y_norm, X_norm)
 
     W_new = W_XY + ΔW_XY
 
@@ -91,7 +92,7 @@ def semisup_hebbian_learning(X, W_XY, Y=None, T=None):
     X = np.array(X)
     T = np.array(T)
 
-    ΔW_XY = params.μ * np.outer(X, T)
+    ΔW_XY = params.μ * np.outer(T, X)
     
     W_new = W_XY + ΔW_XY
 
@@ -125,7 +126,7 @@ def semisup_norm_hebbian_learning(X, W_XY, Y=None, T=None):
     T = np.array(T)
 
     X_norm = X / (np.linalg.norm(X) + 1e-8)
-    ΔW_XY = params.μ * np.outer(X_norm, T)
+    ΔW_XY = params.μ * np.outer(T, X_norm)
     W_new = W_XY + ΔW_XY
 
     return axon_funcs.clip_weights(W_new)
@@ -181,7 +182,7 @@ def widrow_hoff_learning_deep(X, W_XY_matrix, Y=None, T=None):
 
         # Output layer delta
         A_out = Activations[-1]
-        d_out = params.activation_function(A_out, derivative=True, from_output=True)
+        d_out = params.back_activation_function(A_out)
         error = T - A_out
         Deltas[-1] = error * d_out
 
@@ -191,8 +192,7 @@ def widrow_hoff_learning_deep(X, W_XY_matrix, Y=None, T=None):
             Δ_next = Deltas[l + 1]
 
             A_l = Activations[l + 1]
-            d_l = np.array([params.activation_function(y, derivative=True, from_output=False) for y in A_l])
-
+            d_l = np.array([params.back_activation_function(y) for y in A_l])
 
             backprop_signal = W_next.T @ Δ_next
 
